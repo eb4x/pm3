@@ -567,55 +567,71 @@ void dump_gamec(struct gamec *gc);
 void dump_player(struct gamec::player *p, int32_t idx);
 void print_player_name(int16_t idx, bool newline = true);
 
+void print_help(char *command) {
+	fprintf(stderr, "Usage: %s -g 1-8 [ /path/to/saves/ ]\n", command);
+	fprintf(stderr, "\n");
+	fprintf(stderr, "  -[abc]\n");
+	fprintf(stderr, "    dump game[abc]\n");
+	fprintf(stderr, "\n");
+	fprintf(stderr, "  -g 1-8, --game=1-8\n");
+	fprintf(stderr, "    Which savegame to work on\n");
+	fprintf(stderr, "\n");
+	fprintf(stderr, "  [ /path/to/saves/ ]\n");
+	fprintf(stderr, "    optionally provide a path to saves\n");
+}
+
 int main(int argc, char *argv[])
 {
 	int c, optindex = 0;
-	int aopt = 0, bopt = 0, copt = 0, soup = 0;
+	int help = 0;
+	int opt_dump_gamea = 0,
+	    opt_dump_gameb = 0,
+	    opt_dump_gamec = 0;
+
+	char *path = NULL;
+	int game_nr = -1, opt_soup_up = 0;
 
 	static struct option long_options[] = {
-		{ "help", 0, 0, 'h' },
-		{ "soup-up", 0, 0, 's' },
-		{ "version", 0, 0, 'v' },
+		{ "game",    required_argument, 0, 'g' },
+		{ "help",    no_argument,       0, 'h' },
+		{ "soup-up", no_argument,       0, 's' },
+		{ "version", no_argument,       0, 'v' },
 		{ 0, 0, 0, 0 }
 	};
 
-	while ((c = getopt_long(argc, argv, "abc", long_options, &optindex)) != -1) {
-
+	while ((c = getopt_long(argc, argv, "abcg:h", long_options, &optindex)) != -1) {
 		switch (c) {
-			case 'a': aopt = 1; break;
-			case 'b': bopt = 1; break;
-			case 'c': copt = 1; break;
-			case 's': soup = 1; break;
+			case 'a': opt_dump_gamea = 1;     break;
+			case 'b': opt_dump_gameb = 1;     break;
+			case 'c': opt_dump_gamec = 1;     break;
+			case 'g': game_nr = atoi(optarg); break;
+			case 'h': help = 1;               break;
+			case 's': opt_soup_up = 1;        break;
 			default: break;
 		}
 	}
 
-	if (optind >= argc) {
-		fprintf(stderr, "Usage: %s GAME<d>[ABC]>\n", argv[0]);
-		fprintf(stderr, "Try '%s --help' for more information.\n", argv[0]);
-		return EXIT_FAILURE;
+	if (optind < argc) {
+		/* assume a path has been provided */
+		path = argv[optind];
+		fprintf(stderr, "path:%s: argv:%s\n", path, argv[optind]);
 	}
 
-	char gamexa[7];
-	char gamexb[7];
-	char gamexc[7];
+	if (help || argc == 1 || game_nr < 1 || game_nr > 8) {
+		print_help(argv[0]);
+		return EXIT_SUCCESS;
+	}
 
-	assert(isdigit(argv[optind][0]));
+	fprintf(stderr, "sizeof (gamea)        = 0x%0zx\n", sizeof (struct gamea));
+	fprintf(stderr, "sizeof (gameb.club)   = 0x%0zx\n", sizeof (struct gameb::club));
+	fprintf(stderr, "sizeof (gamec.player) = 0x%0zx\n", sizeof (struct gamec::player));
 
-	sprintf(gamexa, "GAME%.1dA", atoi(argv[optind]));
-	sprintf(gamexb, "GAME%.1dB", atoi(argv[optind]));
-	sprintf(gamexc, "GAME%.1dC", atoi(argv[optind]));
+	assert(sizeof (struct gamea)         == 0x7372);
+	assert(sizeof (struct gameb::club)   == 0x023A);
+	assert(sizeof (struct gamec::player) == 0x0028);
 
-	printf("%s, %s, %s\n", gamexa, gamexb, gamexc);
-
-	fprintf(stderr, "sizeof(gamea)        = 0x%0zx\n", sizeof( struct gamea ));
-	fprintf(stderr, "sizeof(gameb.club)   = 0x%0zx\n", sizeof( struct gameb::club ));
-	fprintf(stderr, "sizeof(gamec.player) = 0x%0zx\n", sizeof( struct gamec::player ));
-
-	assert( sizeof( struct gamea )         == 0x7372);
-	assert( sizeof( struct gameb::club   ) == 0x023A );
-	assert( sizeof( struct gamec::player ) == 0x0028 );
-
+	char *gamexa = NULL;
+	size_t gamexa_len = asprintf(&gamexa, "%sGAME%.1dA", path != NULL ? path : "", game_nr);
 	FILE *fga = fopen(gamexa, "r");
 	if (fga == NULL) {
 		printf("Could not open file: %s\n", gamexa);
@@ -623,7 +639,10 @@ int main(int argc, char *argv[])
 	}
 	fread(&gamea, sizeof (struct gamea), 1, fga);
 	fclose(fga);
+	free(gamexa);
 
+	char *gamexb = NULL;
+	size_t gamexb_len = asprintf(&gamexb, "%sGAME%.1dB", path != NULL ? path : "", game_nr);
 	FILE *fgb = fopen(gamexb, "r");
 	if (fgb == NULL) {
 		printf("Could not open file: %s\n", gamexb);
@@ -631,7 +650,10 @@ int main(int argc, char *argv[])
 	}
 	fread(&gameb, sizeof (struct gameb), 1, fgb);
 	fclose(fgb);
+	free(gamexb);
 
+	char *gamexc = NULL;
+	size_t gamexc_len = asprintf(&gamexc, "%sGAME%.1dC", path != NULL ? path : "", game_nr);
 	FILE *fgc = fopen(gamexc, "r");
 	if (fgb == NULL) {
 		printf("Could not open file: %s\n", gamexc);
@@ -639,27 +661,27 @@ int main(int argc, char *argv[])
 	}
 	fread(&gamec, sizeof (struct gamec), 1, fgc);
 	fclose(fgc);
+	free(gamexc);
 
-// -- * -- * -- //
-	if ( aopt ) {
-		printf("GAME%dA\n", atoi(argv[argc-1]));
+	if ( opt_dump_gamea ) {
+		printf("GAME%dA\n", game_nr);
 		dump_gamea(&gamea);
 	}
 
-	if ( bopt ) {
-		printf("GAME%dB\n", atoi(argv[argc-1]));
+	if ( opt_dump_gameb ) {
+		printf("GAME%dB\n", game_nr);
 		dump_gameb(&gameb);
 	}
 
-	if ( copt ) {
-		printf("GAME%dC\n", atoi(argv[argc-1]));
+	if ( opt_dump_gamec ) {
+		printf("GAME%dC\n", game_nr);
 		dump_gamec(&gamec);
 	}
 
 	fax_match_summary();
 
-	if ( soup ) {
-		printf("Souping up GAME%d\n", atoi(argv[argc-1]));
+	if ( opt_soup_up ) {
+		printf("Souping up GAME%d\n", game_nr);
 		int16_t club_idx = gamea.manager[0].club_idx;
 
 		for (int p = 0; p < 24; ++p) {
