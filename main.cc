@@ -561,10 +561,11 @@ void dump_gamea_match_summary();
 void fax_match_summary();
 
 void dump_gameb(struct gameb *gb);
-void dump_gamec(struct gamec *gc);
-
 void dump_club(struct gameb::club *c);
+
+void dump_gamec(struct gamec *gc);
 void dump_player(struct gamec::player *p, int32_t idx);
+void print_player_name(int16_t idx, bool newline = true);
 
 int main(int argc, char *argv[])
 {
@@ -664,7 +665,7 @@ int main(int argc, char *argv[])
 		for (int p = 0; p < 24; ++p) {
 			int16_t player_idx = gameb.club[ club_idx ].player_index[p];
 
-			if ( player_idx == -1)
+			if (player_idx == -1)
 				continue;
 
 			gamec.player[ player_idx ].hn = 97;
@@ -1178,15 +1179,12 @@ void dump_gamea(struct gamea *ga) {
 
 	printf("--- transfer market ---\n");
 	for (int i = 0; i < 45; ++i) {
-		if (gamea.transfer_market[i].player_idx == -1) {
-			printf("player: %d\n", gamea.transfer_market[i].player_idx);
-			continue;
-		}
-		printf("player: (%04x) %12.12s (%04x) %16.16s\n",
-			gamea.transfer_market[i].player_idx,
-			gamec.player[ gamea.transfer_market[i].player_idx ].name,
-			gamea.transfer_market[i].club_idx,
-			gameb.club[ gamea.transfer_market[i].club_idx ].name );
+		print_player_name(gamea.transfer_market[i].player_idx, false);
+		if (gamea.transfer_market[i].player_idx != -1)
+			printf(" (%04x) %16.16s",
+				gamea.transfer_market[i].club_idx,
+				gameb.club[ gamea.transfer_market[i].club_idx ].name );
+		printf("\n");
 	}
 
 	printf("data10z");
@@ -1731,13 +1729,7 @@ void dump_gamea(struct gamea *ga) {
 			printf("Penalties.: %d\n", ga->manager[nr].match_summary.club[i].penalties);
 
 			for (int j = 0; j < 14; ++j) {
-				if ( ga->manager[nr].match_summary.club[i].lineup[j].player_idx == -1 )
-					printf("lineup: %d ", ga->manager[nr].match_summary.club[i].lineup[j].player_idx);
-				else
-					printf("lineup: (%04x) %12.12s",
-						ga->manager[nr].match_summary.club[i].lineup[j].player_idx,
-						gamec.player[ ga->manager[nr].match_summary.club[i].lineup[j].player_idx].name
-					);
+				print_player_name(ga->manager[nr].match_summary.club[i].lineup[j].player_idx);
 
 				for (int k = 0; k < sizeof( ga->manager[nr].match_summary.club[i].lineup[j].data5 ); ++k) {
 					printf(" %02x", ga->manager[nr].match_summary.club[i].lineup[j].data5[k]);
@@ -1750,20 +1742,20 @@ void dump_gamea(struct gamea *ga) {
 			}
 
 			for (int j = 0; j < 8; ++j) {
-				if ( ga->manager[nr].match_summary.club[i].goal[j].player_idx == -1 )
-					printf("goal: %d, magic: %d\n",
-						ga->manager[nr].match_summary.club[i].goal[j].player_idx,
+				print_player_name(ga->manager[nr].match_summary.club[i].goal[j].player_idx, false);
+
+				if (ga->manager[nr].match_summary.club[i].goal[j].player_idx == -1)
+					printf(" time: %d",
 						ga->manager[nr].match_summary.club[i].goal[j].time);
 				else
-					printf("goal: (%04x) %12.12s, %2d:%02d\n",
-						ga->manager[nr].match_summary.club[i].goal[j].player_idx,
-						gamec.player[ ga->manager[nr].match_summary.club[i].goal[j].player_idx].name,
+					printf(" %2d:%02d",
 						ga->manager[nr].match_summary.club[i].goal[j].time / 60,
 						ga->manager[nr].match_summary.club[i].goal[j].time % 60
 					);
+				printf("\n");
 			}
 
-			//assert(ga->manager[nr].match[i].always_null == 0);
+			//assert(ga->manager[nr].match_summary.club[i].always_null == 0);
 			printf("always_null: %04x\n", ga->manager[nr].match_summary.club[i].always_null);
 			printf("Substitutions remaining: %d\n", ga->manager[nr].match_summary.club[i].substitutions_remaining);
 			printf("other remaining: %d\n", ga->manager[nr].match_summary.club[i].other);
@@ -1998,12 +1990,6 @@ void dump_gameb(struct gameb *gb) {
 		dump_club(&gb->club[i]);
 }
 
-void dump_gamec(struct gamec *gc) {
-	for (int i = 0; i < 3932; ++i)
-		dump_player(&gc->player[i], i);
-
-}
-
 void dump_club(struct gameb::club *c) {
 	printf("Club   : %16.16s\n", c->name);
 	printf("Manager: %16.16s\n", c->manager);
@@ -2020,58 +2006,8 @@ void dump_club(struct gameb::club *c) {
 
 
 	for (int i = 0; i < 24; ++i) {
-		if ( c->player_index[i] == -1 )
-			continue;
-
-		printf("Player%02d: (%04x) %12.12s\n",
-		i, c->player_index[i],
-		gamec.player[ c->player_index[i] ].name );
+		print_player_name(c->player_index[i]);
 	}
-/*
-		struct gamec::player * p = &(gamec.player[ t->player_index[i] ]);
-
-
-		dump_player(p, t->player_index[i]);
-
-
-		p->hn = 97;
-		p->tk = 97;
-		p->ps = 97;
-		p->sh = 97;
-
-		switch ( i ) {
-			case 0:
-			case 11:
-				p->hn = 99; break;
-			case 1:
-			case 2:
-			case 4:
-			case 5:
-			case 12:
-				p->tk = 99; break;
-			case 3:
-			case 6:
-			case 10:
-			case 13:
-				p->ps = 99; break;
-			case 7:
-			case 8:
-			case 9:
-			case 14:
-				p->sh = 99; break;
-		}
-
-		p->hd = 99;
-		p->cr = 99;
-		p->ft = 99;
-		p->aggr = 9;
-		p->morl = 9;
-
-		p->wage = 1000;
-		p->contract = 5;
-
-	}
-*/
 
 	for (int i = 0; i < sizeof (c->misc000); ++i) {
 		if ( i % 16 == 0 )
@@ -2148,6 +2084,12 @@ void dump_club(struct gameb::club *c) {
 */
 }
 
+void dump_gamec(struct gamec *gc) {
+	for (int i = 0; i < 3932; ++i)
+		dump_player(&gc->player[i], i);
+
+}
+
 void dump_player(struct gamec::player *p, int32_t idx) {
 
 	static const char *foot[] = { "Left", "Right", "Both" };
@@ -2164,11 +2106,10 @@ void dump_player(struct gamec::player *p, int32_t idx) {
 	};
 	static const char *intense[] = { "Low", "Medium", "Hard", "V.Hard" };
 
-	printf("Player: (%04x) %12.12s %2d\n", idx, p->name, p->age);
-/*
+	printf("Player: (%04x) %12.12s\n", idx, p->name);
+	printf("Age: %2d\n", p->age);
 	printf("Wage: %5d\n", p->wage);
-	printf("Insure: %d", p->ins); printf("%5d\n", p->ins_cost);
-	printf("\n");
+	printf("Insure: %d %5d", p->ins, p->ins_cost);
 	printf("Handling : %2d\n", p->hn);
 	printf("Tackling : %2d\n", p->tk);
 	printf("Passing  : %2d\n", p->ps);
@@ -2185,7 +2126,6 @@ void dump_player(struct gamec::player *p, int32_t idx) {
 	printf("Conceded: \n");
 	printf("DPTS    :  %d\n", p->dpts);
 	printf("Training : %7s, %6s\n", train[p->train], intense[p->intense]);
-*/
 
 	printf("%d year contract\n", p->contract);
 	printf("%02x %02x %02x %02x %02x %02x %02x\n",
@@ -2194,6 +2134,16 @@ void dump_player(struct gamec::player *p, int32_t idx) {
 		p->unk2, p->unk4, p->unk5);
 
 	printf("%d weeks\n\n", (p->inj_away + 3 - 1) / 3);
+}
+
+void print_player_name(int16_t idx, bool newline) {
+	assert( idx >= -1 && idx < 3932);
+
+	if (idx == -1)
+		printf("Player: %d%s", idx, newline ? "\n" : "");
+	else
+		printf("Player: (%04x) %12.12s%s",
+			idx, gamec.player[idx].name, newline ? "\n" : "");
 }
 
 void fax_match_summary()
@@ -2413,12 +2363,7 @@ void dump_gamea_match_summary()
 
 		printf("lineup: ( idx) player_name   d0  d1  d2  d3  d4  ft  cd  sa  sm  s2  ta  tw  pa  pb  ss  x0  x1  x2\n");
 		for (int j = 0; j < 14; ++j) {
-			if ( ms.club[i].lineup[j].player_idx == -1 )
-				printf("lineup: (%4d) %12.12s", ms.club[i].lineup[j].player_idx, "");
-			else
-				printf("lineup: (%04x) %12.12s",
-					ms.club[i].lineup[j].player_idx,
-					gamec.player[ ms.club[i].lineup[j].player_idx ].name);
+			print_player_name(ms.club[i].lineup[j].player_idx);
 
 			for (int k = 0; k < sizeof( ms.club[i].lineup[j].data5 ); ++k)
 				printf(" %03x", ms.club[i].lineup[j].data5[k]);
@@ -2463,13 +2408,12 @@ void dump_gamea_match_summary()
 		printf(" %03x %03x %03x %03x\n", ss, x0, x1, x2);
 
 		for (int j = 0; j < 8; ++j) {
+			print_player_name(ms.club[i].goal[j].player_idx, false);
+
 			if (ms.club[i].goal[j].player_idx == -1)
-				printf("goal: %d, time: %d\n",
-					ms.club[i].goal[j].player_idx,
-					ms.club[i].goal[j].time);
+				printf(" time: %d\n", ms.club[i].goal[j].time);
 			else
-				printf("goal: (%04x) %12.12s, %2d:%02d\n",
-					ms.club[i].goal[j].player_idx, gamec.player[ ms.club[i].goal[j].player_idx].name,
+				printf(" %2d:%02d\n",
 					ms.club[i].goal[j].time / 60,
 					ms.club[i].goal[j].time % 60);
 		}
