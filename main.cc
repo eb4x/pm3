@@ -167,7 +167,7 @@ struct gamea {
 		uint32_t seating_history[23];
 		uint32_t terrace_history[23];
 
-		struct {
+		struct bank_statement {
 			int32_t gate_receipts[2];
 			int32_t club_wages[2];
 			int32_t transfer_fees[2];
@@ -182,20 +182,20 @@ struct gamea {
 			int32_t account_interest[2];
 		} __attribute__ ((packed)) bank_statement[2];
 
-		struct {
+		struct loan {
 			uint32_t amount;
 			uint8_t turn; //3 turns in a week, 42 weeks in a year?
 			uint8_t year;
 		} __attribute__ ((packed)) loan[4];
 
-		struct {
+		struct employee {
 			char name[14];
 			uint8_t skill;
 			uint8_t type : 4;
 			uint8_t age  : 4;
 		} __attribute__ ((packed)) employee[20];
 
-		struct {
+		struct assistant_manager {
 			uint8_t do_training_schedules;
 			uint8_t treat_injured_players;
 			uint8_t check_sponsors_boards;
@@ -211,7 +211,7 @@ struct gamea {
 
 		uint8_t data147[3];
 
-		struct {
+		struct scout {
 			int8_t size;
 			uint8_t skill;
 			uint8_t rating;
@@ -232,7 +232,7 @@ struct gamea {
 		uint32_t money_from_directors;
 		uint8_t data149[20];
 
-		struct {
+		struct news {
 			int16_t type;
 			int32_t amount;
 			int16_t ix1;
@@ -326,7 +326,7 @@ struct gamea {
 		uint8_t foot6[6];
 
 		struct match_summary {
-			struct {
+			struct club {
 				uint16_t club_idx;
 				uint16_t total_goals;
 				uint16_t first_half_goals;
@@ -337,7 +337,7 @@ struct gamea {
 				uint8_t free_kicks;
 				uint8_t penalties;
 
-				struct {
+				struct lineup {
 					int16_t player_idx;
 					uint8_t data5[5];
 					uint8_t fitness; // matches with benched players, but not onfield.
@@ -353,7 +353,7 @@ struct gamea {
 					uint8_t x[3];
 				} __attribute__ ((packed)) lineup[14];
 
-				struct {
+				struct goal {
 					int16_t player_idx;
 					int16_t time;
 				} __attribute__ ((packed)) goal[8];
@@ -386,7 +386,7 @@ struct gamea {
 			uint8_t data158[92];
 		} __attribute__ ((packed)) match_summary;
 
-		struct {
+		struct league_history {
 			uint16_t year;
 			uint16_t div;
 			uint16_t club_idx;
@@ -557,6 +557,7 @@ struct gamec {
 } __attribute__ ((packed)) gamec;
 
 void dump_gamea();
+void dump_gamea_manager(int player = 0);
 void dump_gamea_match_summary();
 void fax_match_summary();
 
@@ -581,7 +582,7 @@ void print_help(char *command) {
 	fprintf(stderr, "    optionally provide a path to saves\n");
 }
 
-void soup_up();
+void soup_up(int player = 0);
 
 int main(int argc, char *argv[])
 {
@@ -771,28 +772,32 @@ void dump_gamea() {
 			case   0:
 				correction =   0;
 				printf("Premier league home/away table\n");
+				printf("Club              W  D  L  F  A   W  D  L  F  A\n");
 				break;
 			case  22:
 				correction =  22;
 				printf("\nDivision 1 home/away table\n");
+				printf("Club              W  D  L  F  A   W  D  L  F  A\n");
 				break;
 			case  46:
 				correction =  46;
 				printf("\nDivision 2 home/away table\n");
+				printf("Club              W  D  L  F  A   W  D  L  F  A\n");
 				break;
 			case  70:
 				correction =  70;
 				printf("\nDivision 3 home/away table\n");
+				printf("Club              W  D  L  F  A   W  D  L  F  A\n");
 				break;
 			case  92:
 				correction =  92;
 				printf("\nConference league home/away table\n");
+				printf("Club              W  D  L  F  A   W  D  L  F  A\n");
 				break;
 			default:
 				break;
 		}
 
-		printf("Club              W  D  L  F  A   W  D  L  F  A\n");
 
 		printf("%16.16s", gameb.club[gamea.table.all[i].club_idx].name);
 		printf(" %2d %2d %2d %2d %2d  %2d %2d %2d %2d %2d, (%02x %02x %02x)\n",
@@ -1115,6 +1120,7 @@ void dump_gamea() {
 		for (int h = 0; h < 20; ++h) {
 			if (gamea.cup[cp].history[h].year == 0)
 				continue;
+
 			printf("%4d: (%04x) %3.3s:%16.16s",
 				gamea.cup[cp].history[h].year,
 				gamea.cup[cp].history[h].club_idx_winner,
@@ -1227,327 +1233,346 @@ void dump_gamea() {
 		printf("\n");
 	}
 
-	for ( int nr = 0; nr < 1; ++nr ) { // XXX don't care about second player
-		printf("Manager: %16.16s\n", gamea.manager[nr].name);
+	dump_gamea_manager(); // XXX don't care about second player
 
-		printf("(%04x)Club: %16.16s\n", gamea.manager[nr].club_idx, gameb.club[ gamea.manager[nr].club_idx ].name);
-		printf("Unk number: %d\n",gamea.manager[nr].unk_number);
-		printf("Contract: %d\n", gamea.manager[nr].contract_length);
-		printf("League match: Seating..£%-2d\n"
-		       "League match: Terraces.£%-2d\n"
-		       "Cup match: Seating.....£%-2d\n"
-		       "Cup match: Terraces....£%-2d\n",
-			gamea.manager[nr].price.league_match_seating,
-			gamea.manager[nr].price.league_match_terrace,
-			gamea.manager[nr].price.cup_match_seating,
-			gamea.manager[nr].price.cup_match_terrace);
+	for (int i = 0; i < sizeof( gamea.data200 ); ++i) {
+		if ( i % 16 == 0 )
+			printf("\n[%03d] ", i);
+		printf("%02x ", gamea.data200[i]);
+	}
+	printf("\n");
 
-		for (int i = 0; i < 23; ++i) {
-			printf("Seating%02d: %6d\n", i,
-				gamea.manager[nr].seating_history[i]);
+	printf("inc_number1: %d\n", gamea.inc_number1);
+	printf("inc_number2: %d\n", gamea.inc_number2);
+	printf("inc_number3: %d\n", gamea.inc_number3);
+
+}
+
+void dump_gamea_manager(int player) {
+	struct gamea::manager &manager = gamea.manager[player];
+	printf("Manager: %16.16s\n", manager.name);
+
+	struct gameb::club &club = gameb.club[manager.club_idx];
+	printf("Club: %16.16s\n", club.name);
+
+	printf("Unk number: %d\n", manager.unk_number);
+	printf("Contract: %d\n", manager.contract_length);
+	printf("League match: Seating..£%-2d\n"
+	       "League match: Terraces.£%-2d\n"
+	       "Cup match: Seating.....£%-2d\n"
+	       "Cup match: Terraces....£%-2d\n",
+		manager.price.league_match_seating,
+		manager.price.league_match_terrace,
+		manager.price.cup_match_seating,
+		manager.price.cup_match_terrace);
+
+	for (int i = 0; i < 23; ++i) {
+		printf("Seating%02d: %6d\n", i,
+			manager.seating_history[i]);
+	}
+
+	for (int i = 0; i < 23; ++i) {
+		printf("Terrace%02d: %6d\n", i,
+			manager.terrace_history[i]);
+	}
+
+
+	for (int i = 0; i < 2; ++i) {
+		if ( i == 0 )
+			printf("daily bank statement\n");
+		if ( i == 1 )
+			printf("yearly bank statement\n");
+
+		enum { DEBIT = 0, CREDIT = 1 };
+		struct gamea::manager::bank_statement &bs = manager.bank_statement[i];
+		printf("gate receipts       = %8d %8d\n", bs.gate_receipts[0],       bs.gate_receipts[1]);
+		printf("club wages          = %8d %8d\n", bs.club_wages[0],          bs.club_wages[1]);
+		printf("transfer fees       = %8d %8d\n", bs.transfer_fees[0],       bs.transfer_fees[1]);
+		printf("club fines          = %8d %8d\n", bs.club_fines[0],          bs.club_fines[1]);
+		printf("grants for club     = %8d %8d\n", bs.grants_for_club[0],     bs.grants_for_club[1]);
+		printf("club bills          = %8d %8d\n", bs.club_bills[0],          bs.club_bills[1]);
+		printf("miscellaneous sales = %8d %8d\n", bs.miscellaneous_sales[0], bs.miscellaneous_sales[1]);
+		printf("bank loan payments  = %8d %8d\n", bs.bank_loan_payments[0],  bs.bank_loan_payments[1]);
+		printf("ground improvements = %8d %8d\n", bs.ground_improvements[0], bs.ground_improvements[1]);
+		printf("advertising boards  = %8d %8d\n", bs.advertising_boards[0],  bs.advertising_boards[1]);
+		printf("other items         = %8d %8d\n", bs.other_items[0],         bs.other_items[1]);
+		printf("account interest    = %8d %8d\n", bs.account_interest[0],    bs.account_interest[1]);
+		printf("\n");
+	}
+
+	for (int i = 0; i < 4; ++i) {
+		struct gamea::manager::loan &loan = manager.loan[i];
+
+		printf("Loan %d:£%-6d, due %d year%s %d turn%s\n",
+			i+1, loan.amount,
+			loan.year, loan.year == 1 ? "" : "s",
+			loan.turn, loan.turn == 1 ? "" : "s");
+	}
+	printf("\n");
+
+	static const char *type[] = {
+		"Assistant",
+		"Youth team",
+		"Physio",
+		"Scout",
+		"4", "5", "6",
+		"Head coach",
+		"Coach [HN]",
+		"Coach [TK]",
+		"Coach [PS]",
+		"Coach [SH]",
+	};
+
+	printf("Employees\n");
+	for (int i = 0; i < 20; ++i) {
+		struct gamea::manager::employee &employee = manager.employee[i];
+		printf("%2d: %14.14s Age: %d Skill: %2d Type: %s\n",
+			i, employee.name, 40 + employee.age, employee.skill, type[ employee.type ] );
+
+	}
+
+	static const char *nyn[] = { "N/A", "Yes", "No" };
+	struct gamea::manager::assistant_manager &am = manager.assistant_manager;
+	printf("Do training schedules.......: %s\n"
+	       "Treat injured players.......: %s\n"
+	       "Check sponsors boards.......: %s\n"
+	       "Hire and fire employees.....: %s\n"
+	       "Negotiate player contracts..: %s\n",
+		nyn[ am.do_training_schedules      ],
+		nyn[ am.treat_injured_players      ],
+		nyn[ am.check_sponsors_boards      ],
+		nyn[ am.hire_and_fire_employees    ],
+		nyn[ am.negotiate_player_contracts ]);
+
+	printf("\n\n%02x\n", manager.data120);
+
+	static const char *skill[] = { "Handling", "Tackling", "Passing", "Shooting" };
+	printf("Type of youth player required:%s\n",
+		skill[ manager.youth_player_type ]);
+
+	printf("%02x\n", manager.data121);
+
+	if ( manager.youth_player != -1 )
+		printf("Youth team player: %12.12s\n",
+			gamec.player[ manager.youth_player ].name);
+
+	for (int i = 0; i < sizeof( manager.data147 ); ++i) {
+		if ( i % 16 == 0 )
+			printf("\n[%3d] ", i);
+		printf("%02x ", manager.data147[i]);
+	}
+	printf("\n");
+
+	static const char *division[] = {
+		"Premier league",
+		"Division one",
+		"Division two",
+		"Division three",
+		"Conference league"
+	};
+
+	static const char *foot[] = {
+		"Left",
+		"Right",
+		"Both",
+		"Any"
+	};
+
+	static const char *rating[] = {
+		"Fair *",
+		"Fair **",
+		"Fair ***",
+		"Fair ****",
+		"Fair *****",
+		"Good *",
+		"Good **",
+		"Good ***",
+		"Good ****",
+		"Good *****",
+		"V.Good *",
+		"V.Good **",
+		"V.Good ***",
+		"V.Good ****",
+		"V.Good *****"
+	};
+
+	printf("Scouts\n");
+	for (int i = 0; i < 4; ++i) {
+		struct gamea::manager::scout &scout = manager.scout[i];
+		printf("size: %d\n", scout.size);
+		printf("%d Division: %s" "Club: %d Skill: %s\n"
+			"Rating: %s\n"
+			"Foot: %s\n",
+			i, division[ scout.division ],
+			scout.club,
+			skill[ scout.skill ],
+			rating[ scout.rating ],
+			foot[ scout.foot ]);
+
+		for (int j = 0; j < 18; ++j) {
+			if ( scout.results[j].ix1 == -1)
+				continue;
+
+			printf("  %12.12s %04x\n",
+				gamec.player[ scout.results[j].ix1 ].name,
+				scout.results[j].ix2);
 		}
 
-		for (int i = 0; i < 23; ++i) {
-			printf("Terrace%02d: %6d\n", i,
-				gamea.manager[nr].terrace_history[i]);
+		for (int j = 0; j < sizeof (scout.other); ++j) {
+			printf("%02x ", scout.other[j]);
 		}
-
-
-		for (int i = 0; i < 2; ++i) {
-			if ( i == 0 )
-				printf("daily bank statement\n");
-			if ( i == 1 )
-				printf("yearly bank statement\n");
-
-			printf("gate receipts       = %8d %8d\n", gamea.manager[nr].bank_statement[i].gate_receipts[0],       gamea.manager[nr].bank_statement[i].gate_receipts[1]);
-			printf("club wages          = %8d %8d\n", gamea.manager[nr].bank_statement[i].club_wages[0],          gamea.manager[nr].bank_statement[i].club_wages[1]);
-			printf("transfer fees       = %8d %8d\n", gamea.manager[nr].bank_statement[i].transfer_fees[0],       gamea.manager[nr].bank_statement[i].transfer_fees[1]);
-			printf("club fines          = %8d %8d\n", gamea.manager[nr].bank_statement[i].club_fines[0],          gamea.manager[nr].bank_statement[i].club_fines[1]);
-			printf("grants for club     = %8d %8d\n", gamea.manager[nr].bank_statement[i].grants_for_club[0],     gamea.manager[nr].bank_statement[i].grants_for_club[1]);
-			printf("club bills          = %8d %8d\n", gamea.manager[nr].bank_statement[i].club_bills[0],          gamea.manager[nr].bank_statement[i].club_bills[1]);
-			printf("miscellaneous sales = %8d %8d\n", gamea.manager[nr].bank_statement[i].miscellaneous_sales[0], gamea.manager[nr].bank_statement[i].miscellaneous_sales[1]);
-			printf("bank loan payments  = %8d %8d\n", gamea.manager[nr].bank_statement[i].bank_loan_payments[0],  gamea.manager[nr].bank_statement[i].bank_loan_payments[1]);
-			printf("ground improvements = %8d %8d\n", gamea.manager[nr].bank_statement[i].ground_improvements[0], gamea.manager[nr].bank_statement[i].ground_improvements[1]);
-			printf("advertising boards  = %8d %8d\n", gamea.manager[nr].bank_statement[i].advertising_boards[0],  gamea.manager[nr].bank_statement[i].advertising_boards[1]);
-			printf("other items         = %8d %8d\n", gamea.manager[nr].bank_statement[i].other_items[0],         gamea.manager[nr].bank_statement[i].other_items[1]);
-			printf("account interest    = %8d %8d\n", gamea.manager[nr].bank_statement[i].account_interest[0],    gamea.manager[nr].bank_statement[i].account_interest[1]);
-			printf("\n");
-		}
-
-		for (int i = 0; i < 4; ++i)
-			printf("Loan %d:£%-6d, due %d year%s %d turn%s\n",
-				i, gamea.manager[nr].loan[i].amount,
-				gamea.manager[nr].loan[i].year, gamea.manager[nr].loan[i].year == 1 ? "" : "s",
-				gamea.manager[nr].loan[i].turn, gamea.manager[nr].loan[i].turn == 1 ? "" : "s");
 		printf("\n");
 
-		static const char *type[] = {
-			"Assistant",
-			"Youth team",
-			"Physio",
-			"Scout",
-			"4", "5", "6",
-			"Head coach",
-			"Coach [HN]",
-			"Coach [TK]",
-			"Coach [PS]",
-			"Coach [SH]",
-		};
-
-		for (int i = 0; i < 20; ++i) {
-			printf("Employee: %14.14s (%d), %2d %s\n",
-				gamea.manager[nr].employee[i].name,
-				gamea.manager[nr].employee[i].age + 40,
-				gamea.manager[nr].employee[i].skill,
-				type[ gamea.manager[nr].employee[i].type ] );
-
-			if (gamea.manager[nr].employee[i].skill)
-				gamea.manager[nr].employee[i].skill = 99;
-		}
-
-		static const char *nyn[] = { "N/A", "Yes", "No" };
-
-		printf("Do training schedules.......: %s\n"
-		       "Treat injured players.......: %s\n"
-		       "Check sponsors boards.......: %s\n"
-		       "Hire and fire employees.....: %s\n"
-		       "Negotiate player contracts..: %s\n",
-			nyn[ gamea.manager[nr].assistant_manager.do_training_schedules      ],
-			nyn[ gamea.manager[nr].assistant_manager.treat_injured_players      ],
-			nyn[ gamea.manager[nr].assistant_manager.check_sponsors_boards      ],
-			nyn[ gamea.manager[nr].assistant_manager.hire_and_fire_employees    ],
-			nyn[ gamea.manager[nr].assistant_manager.negotiate_player_contracts ]);
-
-		printf("\n\n%02x\n", gamea.manager[nr].data120);
-
-		static const char *skill[] = { "Handling", "Tackling", "Passing", "Shooting" };
-		printf("Type of youth player required:%s\n",
-			skill[ gamea.manager[nr].youth_player_type ]);
-
-		printf("%02x\n", gamea.manager[nr].data121);
-
-		if ( gamea.manager[nr].youth_player != -1 )
-			printf("Youth team player: %12.12s\n",
-				gamec.player[ gamea.manager[nr].youth_player ].name);
-
-		for (int i = 0; i < sizeof( gamea.manager[nr].data147 ); ++i) {
-			if ( i % 16 == 0 )
-				printf("\n[%3d] ", i);
-			printf("%02x ", gamea.manager[nr].data147[i]);
-		}
 		printf("\n");
+	}
 
-		static const char *division[] = {
-			"Premier league",
-			"Division one",
-			"Division two",
-			"Division three",
-			"Conference league"
-		};
+	printf("Number 1            :%d\n", manager.number1);
+	printf("Number 2            :%d\n", manager.number2);
+	printf("Number 3            :%d\n", manager.number3);
+	printf("Money from directors:%d\n", manager.money_from_directors);
 
-		static const char *foot[] = {
-			"Left",
-			"Right",
-			"Both",
-			"Any"
-		};
+	for (int i = 0; i < sizeof (manager.data149); ++i) {
+		if ( i % 16 == 0 )
+			printf("\n[%3d] ", i);
+		printf("%02x ", manager.data149[i]);
+	}
+	printf("\n");
 
-		static const char *rating[] = {
-			"Fair *",
-			"Fair **",
-			"Fair ***",
-			"Fair ****",
-			"Fair *****",
-			"Good *",
-			"Good **",
-			"Good ***",
-			"Good ****",
-			"Good *****",
-			"V.Good *",
-			"V.Good **",
-			"V.Good ***",
-			"V.Good ****",
-			"V.Good *****"
-		};
+	printf("--News--\n");
+	for ( int i = 0; i < 8; ++i ) {
+		struct gamea::manager::news &news = manager.news[i];
+		switch ( news.type ) {
+			case 1:
+				printf("The V.A.T. demand has been payed to the department\n"
+					"of customs and excise\n");
+				break;
 
-		for (int i = 0; i < 4; ++i) {
-			printf("size: %d\n", gamea.manager[nr].scout[i].size);
-			printf("Scout[%d]" "Division: %s" "Club: %d"
-				"Skill: %s\n"
-				"Rating: %s\n"
-				"Foot: %s\n",
-				i, division[ gamea.manager[nr].scout[i].division ],
-				gamea.manager[nr].scout[i].club,
-				skill[ gamea.manager[nr].scout[i].skill ],
-				rating[ gamea.manager[nr].scout[i].rating ],
-				foot[ gamea.manager[nr].scout[i].foot ]);
+			case 2:
+				printf("Due to a mistake in your last tax return you have\n"
+					"received a bill of £%-7d from the taxman\n", news.amount);
+				break;
 
-			for (int j = 0; j < 18; ++j) {
-				if ( gamea.manager[nr].scout[i].results[j].ix1 == -1)
-					continue;
+			case 3:
+				printf("You have exceeded your overdraft limit so you are\n"
+					"now liable for a higher rate of interest\n");
+				break;
 
-				printf("  %12.12s %04x\n",
-					gamec.player[ gamea.manager[nr].scout[i].results[j].ix1 ].name,
-					gamea.manager[nr].scout[i].results[j].ix2);
-			}
+			case 9:
+				printf("You have received a grant of £%-7d from the\n"
+					"F.A. for general ground improvements\n",
+					news.amount);
+				break;
 
-			for (int j = 0; j < sizeof( gamea.manager[nr].scout[i].other ); ++j) {
-				printf("%02x ", gamea.manager[nr].scout[i].other[j]);
-			}
-			printf("\n");
+			case 10:
+				printf("The club has been fined £%-7d for bringing the\n"
+					"game into disrepute\n", news.amount);
+				break;
 
-			printf("\n");
+			case 12:
+				printf("After receiving a complaint of poor hygiene the\n"
+					"health authority have fined you £%d\n", news.amount);
+				break;
+
+			case 16:
+				printf("The board pays the shareholders £%d\n",
+					news.amount);
+				break;
+
+			case 17:
+				printf("%12.12s is playing for his country today\n",
+					gamec.player[ news.ix2 ].name);
+				break;
+
+			case 18:
+				printf("A national TV station has payed your club £%d\n"
+					"for the live T.V. coverage of your last match\n",
+					news.amount);
+				break;
+
+			case 20:
+				printf("%12.12s has now retired from football\n",
+					gamec.player[ news.ix2 ].name);
+				break;
+
+			case 21:
+				printf("%12.12s will be taking early retirement from\n"
+				       "football in 4 weeks time\n",
+					gamec.player[ news.ix2 ].name);
+				break;
+
+			case 22:
+				printf("%12.12s has now taken early retirement for a\n"
+				       "life of luxury in the Costa del Sol\n",
+					gamec.player[ news.ix2 ].name);
+				break;
+
+			case 23:
+				printf("%12.12s has retired due to an injury\n",
+					gamec.player[ news.ix2 ].name);
+				break;
+
+			case 24:
+				printf("A member of your staff has retired\n");
+				break;
+
+			case 25:
+				printf("%12.12s has been injured while training\n",
+					gamec.player[ news.ix2 ].name);
+				break;
+
+			case 26:
+				printf("The youth team coach has found a youth player who\n"
+					"matches your requirements\n");
+				break;
+
+			case 27:
+				printf("%12.12s due to having no contract left with\n"
+					"your club has now signed for %16.16s\n",
+					gamec.player[ news.ix2 ].name,
+					gameb.club[ news.ix1 ].name);
+				break;
+
+			case 29:
+				printf("Phone me up %16.16s from %16.16s\n"
+					"Telephone No. 844444 (%12.12s)\n",
+					gameb.club[ news.ix1 ].manager,
+					gameb.club[ news.ix1 ].name,
+					gamec.player[ news.ix2 ].name);
+					break;
+
+			case 30:
+				printf("You have been voted manager of the month\n");
+				break;
+
+			case 31:
+				printf("Your job application to become the manager of\n"
+					"%16.16s has been turned down\n", gameb.club[ news.ix1 ].name);
+				break;
+
+			case 32:
+				printf("The board of directors have given you a public\n"
+					"vote of confidence\n");
+				break;
+
+			default:
+				printf("%3d, %d, (%d, %d, %d)\n",
+					news.type, news.amount,
+					news.ix1, news.ix2, news.ix3);
+				break;
 		}
+	}
 
-		printf("Number 1            :%d\n", gamea.manager[nr].number1);
-		printf("Number 2            :%d\n", gamea.manager[nr].number2);
-		printf("Number 3            :%d\n", gamea.manager[nr].number3);
-		printf("Money from directors:%d\n", gamea.manager[nr].money_from_directors);
+	assert(manager.minus_one == -1);
 
-		for (int i = 0; i < sizeof( gamea.manager[nr].data149 ); ++i) {
-			if ( i % 16 == 0 )
-				printf("\n[%3d] ", i);
-			printf("%02x ", gamea.manager[nr].data149[i]);
-		}
-		printf("\n");
-
-		printf("--News--\n");
-		for ( int i = 0; i < 8; ++i ) {
-			switch ( gamea.manager[nr].news[i].type ) {
-				case 1:
-					printf("The V.A.T. demand has been payed to the department\n"
-						"of customs and excise\n");
-					break;
-
-				case 2:
-					printf("Due to a mistake in your last tax return you have\n"
-						"received a bill of £%-7d from the taxman\n", gamea.manager[nr].news[i].amount);
-					break;
-
-				case 3:
-					printf("You have exceeded your overdraft limit so you are\n"
-						"now liable for a higher rate of interest\n");
-					break;
-
-				case 9:
-					printf("You have received a grant of £%-7d from the\n"
-						"F.A. for general ground improvements\n",
-						gamea.manager[nr].news[i].amount);
-					break;
-
-				case 10:
-					printf("The club has been fined £%-7d for bringing the\n"
-						"game into disrepute\n", gamea.manager[nr].news[i].amount);
-					break;
-
-				case 12:
-					printf("After receiving a complaint of poor hygiene the\n"
-						"health authority have fined you £%d\n", gamea.manager[nr].news[i].amount);
-					break;
-
-				case 16:
-					printf("The board pays the shareholders £%d\n",
-						gamea.manager[nr].news[i].amount);
-					break;
-
-				case 17:
-					printf("%12.12s is playing for his country today\n",
-						gamec.player[ gamea.manager[nr].news[i].ix2 ].name);
-					break;
-
-				case 18:
-					printf("A national TV station has payed your club £%d\n"
-						"for the live T.V. coverage of your last match\n",
-						gamea.manager[nr].news[i].amount);
-					break;
-
-				case 20:
-					printf("%12.12s has now retired from football\n",
-						gamec.player[ gamea.manager[nr].news[i].ix2 ].name);
-					break;
-
-				case 21:
-					printf("%12.12s will be taking early retirement from\n"
-					       "football in 4 weeks time\n",
-						gamec.player[ gamea.manager[nr].news[i].ix2 ].name);
-					break;
-
-				case 22:
-					printf("%12.12s has now taken early retirement for a\n"
-					       "life of luxury in the Costa del Sol\n",
-						gamec.player[ gamea.manager[nr].news[i].ix2 ].name);
-					break;
-
-				case 23:
-					printf("%12.12s has retired due to an injury\n",
-						gamec.player[ gamea.manager[nr].news[i].ix2 ].name);
-					break;
-
-				case 24:
-					printf("A member of your staff has retired\n");
-					break;
-
-				case 25:
-					printf("%12.12s has been injured while training\n",
-						gamec.player[ gamea.manager[nr].news[i].ix2 ].name);
-					break;
-
-				case 26:
-					printf("The youth team coach has found a youth player who\n"
-						"matches your requirements\n");
-					break;
-
-				case 27:
-					printf("%12.12s due to having no contract left with\n"
-						"your club has now signed for %16.16s\n",
-						gamec.player[ gamea.manager[nr].news[i].ix2 ].name,
-						gameb.club[ gamea.manager[nr].news[i].ix1 ].name);
-					break;
-
-				case 29:
-					printf("Phone me up %16.16s from %16.16s\n"
-						"Telephone No. 844444 (%12.12s)\n",
-						gameb.club[ gamea.manager[nr].news[i].ix1 ].manager,
-						gameb.club[ gamea.manager[nr].news[i].ix1 ].name,
-						gamec.player[ gamea.manager[nr].news[i].ix2 ].name);
-						break;
-
-				case 30:
-					printf("You have been voted manager of the month\n");
-					break;
-
-				case 31:
-					printf("Your job application to become the manager of\n"
-						"%16.16s has been turned down\n", gameb.club[ gamea.manager[nr].news[i].ix1 ].name);
-					break;
-
-				case 32:
-					printf("The board of directors have given you a public\n"
-						"vote of confidence\n");
-					break;
-
-				default:
-					printf("%3d, %d, (%d, %d, %d)\n",
-						gamea.manager[nr].news[i].type,
-						gamea.manager[nr].news[i].amount,
-						gamea.manager[nr].news[i].ix1,
-						gamea.manager[nr].news[i].ix2,
-						gamea.manager[nr].news[i].ix3);
-					break;
-			}
-		}
-
-		assert(gamea.manager[nr].minus_one == -1);
-
-		for (int i = 0; i < 2; ++i) {
-			if ( gamea.manager[nr].unknown_player_idx[i] == -1 )
-				printf("Unknown Player%d: %d\n", gamea.manager[nr].unknown_player_idx[i]);
-			else
-				printf("Unknown Player%d: (%04x) %12.12s\n",
-					gamea.manager[nr].unknown_player_idx[i],
-					gamec.player[ gamea.manager[nr].unknown_player_idx[i] ].name
-				);
-		}
+	for (int i = 0; i < 2; ++i) {
+		if ( manager.unknown_player_idx[i] == -1 )
+			printf("Unknown Player%d: %d\n", i, manager.unknown_player_idx[i]);
+		else
+			printf("Unknown Player%d: (%04x) %12.12s\n",
+				i, manager.unknown_player_idx[i],
+				gamec.player[ manager.unknown_player_idx[i] ].name
+			);
+	}
 
 //		printf("d6 01, %d, %12.12s\n", 0x01d6, gamec.player[0x01d6].name);
 
@@ -1555,101 +1580,101 @@ void dump_gamea() {
 		 * suspect it's player (gamec) data somehow
 		 * */
 		printf("\n--- data150 --- 0x01d6 = 365. repeats alot.\n");
-		for (int i = 0; i < sizeof( gamea.manager[nr].data150 ); ++i) {
+		for (int i = 0; i < sizeof (manager.data150); ++i) {
 			if ( i % 16 == 0 )
 				printf("\n[%4d]", i);
-			printf(" %02x", gamea.manager[nr].data150[i]);
+			printf(" %02x", manager.data150[i]);
 		}
 		printf("\n");
 
 		for ( int i = 0; i < 4; ++i )
-			printf("stadium[%d].string: %20.20s\n", i, gamea.manager[nr].stadium[i].string);
+			printf("stadium[%d].string: %20.20s\n", i, manager.stadium[i].string);
 		printf("\n");
 
-		printf("seating_build[north] = %d, %d\n", gamea.manager[nr].seating_build[0].level, gamea.manager[nr].seating_build[0].time);
-		printf("seating_build[east ] = %d, %d\n", gamea.manager[nr].seating_build[1].level, gamea.manager[nr].seating_build[1].time);
-		printf("seating_build[south] = %d, %d\n", gamea.manager[nr].seating_build[2].level, gamea.manager[nr].seating_build[2].time);
-		printf("seating_build[west ] = %d, %d\n", gamea.manager[nr].seating_build[3].level, gamea.manager[nr].seating_build[3].time);
+		printf("seating_build[north] = %d, %d\n", manager.seating_build[0].level, manager.seating_build[0].time);
+		printf("seating_build[east ] = %d, %d\n", manager.seating_build[1].level, manager.seating_build[1].time);
+		printf("seating_build[south] = %d, %d\n", manager.seating_build[2].level, manager.seating_build[2].time);
+		printf("seating_build[west ] = %d, %d\n", manager.seating_build[3].level, manager.seating_build[3].time);
 
-		printf("seating[north] = %d, %d\n", gamea.manager[nr].seating[0].level, gamea.manager[nr].seating[0].time);
-		printf("seating[east ] = %d, %d\n", gamea.manager[nr].seating[1].level, gamea.manager[nr].seating[1].time);
-		printf("seating[south] = %d, %d\n", gamea.manager[nr].seating[2].level, gamea.manager[nr].seating[2].time);
-		printf("seating[west ] = %d, %d\n", gamea.manager[nr].seating[3].level, gamea.manager[nr].seating[3].time);
+		printf("seating[north] = %d, %d\n", manager.seating[0].level, manager.seating[0].time);
+		printf("seating[east ] = %d, %d\n", manager.seating[1].level, manager.seating[1].time);
+		printf("seating[south] = %d, %d\n", manager.seating[2].level, manager.seating[2].time);
+		printf("seating[west ] = %d, %d\n", manager.seating[3].level, manager.seating[3].time);
 
-		printf("area_covering[north] = %d, %d\n", gamea.manager[nr].area_covering[0].level, gamea.manager[nr].area_covering[0].time);
-		printf("area_covering[east ] = %d, %d\n", gamea.manager[nr].area_covering[1].level, gamea.manager[nr].area_covering[1].time);
-		printf("area_covering[south] = %d, %d\n", gamea.manager[nr].area_covering[2].level, gamea.manager[nr].area_covering[2].time);
-		printf("area_covering[west ] = %d, %d\n", gamea.manager[nr].area_covering[3].level, gamea.manager[nr].area_covering[3].time);
+		printf("area_covering[north] = %d, %d\n", manager.area_covering[0].level, manager.area_covering[0].time);
+		printf("area_covering[east ] = %d, %d\n", manager.area_covering[1].level, manager.area_covering[1].time);
+		printf("area_covering[south] = %d, %d\n", manager.area_covering[2].level, manager.area_covering[2].time);
+		printf("area_covering[west ] = %d, %d\n", manager.area_covering[3].level, manager.area_covering[3].time);
 
-		printf("ground_facilities = %d, %d\n", gamea.manager[nr].ground_facilities.level, gamea.manager[nr].ground_facilities.time);
-		printf("supporters_club   = %d, %d\n", gamea.manager[nr].supporters_club.level,   gamea.manager[nr].supporters_club.time);
-		printf("flood_lights      = %d, %d\n", gamea.manager[nr].flood_lights.level,      gamea.manager[nr].flood_lights.time);
-		printf("scoreboard        = %d, %d\n", gamea.manager[nr].scoreboard.level,        gamea.manager[nr].scoreboard.time);
-		printf("undersoil_heating = %d, %d\n", gamea.manager[nr].undersoil_heating.level, gamea.manager[nr].undersoil_heating.time);
-		printf("changing_rooms    = %d, %d\n", gamea.manager[nr].changing_rooms.level,    gamea.manager[nr].changing_rooms.time);
-		printf("gymnasium         = %d, %d\n", gamea.manager[nr].gymnasium.level,         gamea.manager[nr].gymnasium.time);
-		printf("car_park          = %d, %d\n", gamea.manager[nr].car_park.level,          gamea.manager[nr].car_park.time);
+		printf("ground_facilities = %d, %d\n", manager.ground_facilities.level, manager.ground_facilities.time);
+		printf("supporters_club   = %d, %d\n", manager.supporters_club.level,   manager.supporters_club.time);
+		printf("flood_lights      = %d, %d\n", manager.flood_lights.level,      manager.flood_lights.time);
+		printf("scoreboard        = %d, %d\n", manager.scoreboard.level,        manager.scoreboard.time);
+		printf("undersoil_heating = %d, %d\n", manager.undersoil_heating.level, manager.undersoil_heating.time);
+		printf("changing_rooms    = %d, %d\n", manager.changing_rooms.level,    manager.changing_rooms.time);
+		printf("gymnasium         = %d, %d\n", manager.gymnasium.level,         manager.gymnasium.time);
+		printf("car_park          = %d, %d\n", manager.car_park.level,          manager.car_park.time);
 
 		printf("safety rating     = ");
-		for (int i = 0; i < sizeof( gamea.manager[nr].safety_rating ); ++i)
-			printf("%02x ", gamea.manager[nr].safety_rating[i]);
+		for (int i = 0; i < sizeof (manager.safety_rating); ++i)
+			printf("%02x ", manager.safety_rating[i]);
 		printf("\n");
 
-		printf("seating_capacity[north] = %5d\n", gamea.manager[nr].seating_capacity[0]);
-		printf("seating_capacity[east ] = %5d\n", gamea.manager[nr].seating_capacity[1]);
-		printf("seating_capacity[south] = %5d\n", gamea.manager[nr].seating_capacity[2]);
-		printf("seating_capacity[west ] = %5d\n", gamea.manager[nr].seating_capacity[3]);
+		printf("seating_capacity[north] = %5d\n", manager.seating_capacity[0]);
+		printf("seating_capacity[east ] = %5d\n", manager.seating_capacity[1]);
+		printf("seating_capacity[south] = %5d\n", manager.seating_capacity[2]);
+		printf("seating_capacity[west ] = %5d\n", manager.seating_capacity[3]);
 
 		printf("Numb01: %5d\nNumb02: %5d\nNumb03: %5d\nNumb04: %5d\n",
-			gamea.manager[nr].numb01, gamea.manager[nr].numb02,
-			gamea.manager[nr].numb03, gamea.manager[nr].numb04);
+			manager.numb01, manager.numb02,
+			manager.numb03, manager.numb04);
 		printf("Managerial rating.....:%3d\% (%+2d\%)\n"
 		       "Directors confidence..:%3d\% (%+2d\%)\n"
 		       "Supporters confidence.:%3d\% (%+2d\%)\n",
-			gamea.manager[nr].managerial_rating_current,
-			gamea.manager[nr].managerial_rating_current - gamea.manager[nr].managerial_rating_start,
-			gamea.manager[nr].directors_confidence_current,
-			gamea.manager[nr].directors_confidence_current - gamea.manager[nr].directors_confidence_start,
-			gamea.manager[nr].supporters_confidence_current,
-			gamea.manager[nr].supporters_confidence_current - gamea.manager[nr].supporters_confidence_start);
+			manager.managerial_rating_current,
+			manager.managerial_rating_current - manager.managerial_rating_start,
+			manager.directors_confidence_current,
+			manager.directors_confidence_current - manager.directors_confidence_start,
+			manager.supporters_confidence_current,
+			manager.supporters_confidence_current - manager.supporters_confidence_start);
 
 
 		printf("---- match data start ?----\n");
 
-		for (int i = 0; i < sizeof( gamea.manager[nr].head6 ); ++i) {
+		for (int i = 0; i < sizeof (manager.head6); ++i) {
 			if ( i % 16 == 0 )
 				printf("\n[%03d] ", i);
-			printf("%02x ", gamea.manager[nr].head6[i]);
+			printf("%02x ", manager.head6[i]);
 		}
 		printf("\n");
 
-		if ( gamea.manager[nr].player3_idx == -1 )
-			printf("NomPlayer1: %d ", gamea.manager[nr].player3_idx);
+		if (manager.player3_idx == -1 )
+			printf("NomPlayer1: %d ", manager.player3_idx);
 		else
 			printf("NomPlayer1: (%04x) %12.12s",
-				gamea.manager[nr].player3_idx,
-				gamec.player[ gamea.manager[nr].player3_idx ].name
+				manager.player3_idx,
+				gamec.player[ manager.player3_idx ].name
 			);
 
-		for (int i = 0; i < sizeof( gamea.manager[nr].magic4 ); ++i) {
+		for (int i = 0; i < sizeof (manager.magic4); ++i) {
 			if ( i % 16 == 0 )
 				printf("\n[%03d] ", i);
-			printf("%02x ", gamea.manager[nr].magic4[i]);
+			printf("%02x ", manager.magic4[i]);
 		}
 		printf("\n");
 
-		if ( gamea.manager[nr].player4_idx == -1 )
-			printf("NomPlayer2: %d ", gamea.manager[nr].player4_idx);
+		if ( manager.player4_idx == -1 )
+			printf("NomPlayer2: %d ", manager.player4_idx);
 		else
 			printf("NomPlayer2: (%04x) %12.12s",
-				gamea.manager[nr].player4_idx,
-				gamec.player[ gamea.manager[nr].player4_idx ].name
+				manager.player4_idx,
+				gamec.player[ manager.player4_idx ].name
 			);
 
-		for (int i = 0; i < sizeof( gamea.manager[nr].foot6 ); ++i) {
+		for (int i = 0; i < sizeof (manager.foot6); ++i) {
 			if ( i % 16 == 0 )
 				printf("\n[%03d] ", i);
-			printf("%02x ", gamea.manager[nr].foot6[i]);
+			printf("%02x ", manager.foot6[i]);
 		}
 		printf("\n");
 
@@ -1665,81 +1690,95 @@ void dump_gamea() {
 			gamea.manager[nr].match[1].first_half_goals
 		);
 */		
+
+		printf("match summary\n");
+
+		struct gamea::manager::match_summary &ms = manager.match_summary;
 		for (int i = 0; i < 2; ++i) {
-			printf("---- club data ----\n");
-			if (gamea.manager[nr].match_summary.club[i].club_idx == -1)
-				printf("%d", gamea.manager[nr].match_summary.club[i].club_idx);
-			else
-				printf("%s: (%04x) %16.16s", i ? "Away" : "Home", gamea.manager[nr].match_summary.club[i].club_idx, gameb.club[ gamea.manager[nr].match_summary.club[i].club_idx ].name);
+			struct gamea::manager::match_summary::club &club = ms.club[i];
+			if (club.club_idx == -1) {
+				printf("%s: %d", i ? "Away" : "Home",
+					club.club_idx);
+				continue;
+			}
+
+			printf("%s: (%04x) %16.16s", i ? "Away" : "Home",
+				club.club_idx, gameb.club[ club.club_idx ].name);
 
 			printf(" Goals: %d(%d)\n",
-				gamea.manager[nr].match_summary.club[i].total_goals,
-				gamea.manager[nr].match_summary.club[i].first_half_goals
+				club.total_goals,
+				club.first_half_goals
 			);
 
 			printf("Pattern:");
-			for (int j = 0; j < sizeof (gamea.manager[nr].match_summary.club[i].pattern6); ++j) {
-				printf(" %02x", gamea.manager[nr].match_summary.club[i].pattern6[j]);
-			}
-//			printf("\n");
-
-			for (int j = 0; j < sizeof (gamea.manager[nr].match_summary.club[i].match_data); ++j) {
-				if ( j % 16 == 0 )
-					printf("\n[%03d]", j);
-				printf(" %02x", gamea.manager[nr].match_summary.club[i].match_data[j]);
+			for (int j = 0; j < sizeof (club.pattern6); ++j) {
+				printf(" %02x", club.pattern6[j]);
 			}
 			printf("\n");
 
-			printf("Corners...: %d\n", gamea.manager[nr].match_summary.club[i].corners);
-			printf("Throw ins.: %d\n", gamea.manager[nr].match_summary.club[i].throw_ins);
-			printf("Free kicks: %d\n", gamea.manager[nr].match_summary.club[i].free_kicks);
-			printf("Penalties.: %d\n", gamea.manager[nr].match_summary.club[i].penalties);
+			for (int j = 0; j < sizeof (club.match_data); ++j) {
+				if ( j % 16 == 0 )
+					printf("\n[%03d]", j);
+				printf(" %02x", club.match_data[j]);
+			}
+			printf("\n");
 
+			printf("Corners...: %d\n", club.corners);
+			printf("Throw ins.: %d\n", club.throw_ins);
+			printf("Free kicks: %d\n", club.free_kicks);
+			printf("Penalties.: %d\n", club.penalties);
+
+			printf("Lineup\n");
 			for (int j = 0; j < 14; ++j) {
-				print_player_name(gamea.manager[nr].match_summary.club[i].lineup[j].player_idx);
+				struct gamea::manager::match_summary::club::lineup &lineup = club.lineup[j];
+				print_player_name(lineup.player_idx, false);
 
-				for (int k = 0; k < sizeof( gamea.manager[nr].match_summary.club[i].lineup[j].data5 ); ++k) {
-					printf(" %02x", gamea.manager[nr].match_summary.club[i].lineup[j].data5[k]);
+				for (int k = 0; k < sizeof (lineup.data5); ++k) {
+					printf(" %02x", lineup.data5[k]);
 				}
-				printf(" [%d]", gamea.manager[nr].match_summary.club[i].lineup[j].card); // 4 = red, 1 = yellow?
-				for (int k = 0; k < sizeof( gamea.manager[nr].match_summary.club[i].lineup[j].x ); ++k) {
-					printf(" %02x", gamea.manager[nr].match_summary.club[i].lineup[j].x[k]);
+
+				printf(" [%d]", lineup.card); // 4 = red, 1 = yellow?
+
+				for (int k = 0; k < sizeof (lineup.x); ++k) {
+					printf(" %02x", lineup.x[k]);
 				}
 				printf("\n");
 			}
 
+			printf("Goals\n");
 			for (int j = 0; j < 8; ++j) {
-				print_player_name(gamea.manager[nr].match_summary.club[i].goal[j].player_idx, false);
+				struct gamea::manager::match_summary::club::goal &goal = club.goal[j];
+				print_player_name(goal.player_idx, false);
 
-				if (gamea.manager[nr].match_summary.club[i].goal[j].player_idx == -1)
+				if (goal.player_idx == -1)
 					printf(" time: %d",
-						gamea.manager[nr].match_summary.club[i].goal[j].time);
+						goal.time);
 				else
 					printf(" %2d:%02d",
-						gamea.manager[nr].match_summary.club[i].goal[j].time / 60,
-						gamea.manager[nr].match_summary.club[i].goal[j].time % 60
+						goal.time / 60,
+						goal.time % 60
 					);
 				printf("\n");
 			}
 
-			//assert(gamea.manager[nr].match_summary.club[i].always_null == 0);
-			printf("always_null: %04x\n", gamea.manager[nr].match_summary.club[i].always_null);
-			printf("Substitutions remaining: %d\n", gamea.manager[nr].match_summary.club[i].substitutions_remaining);
-			printf("other remaining: %d\n", gamea.manager[nr].match_summary.club[i].other);
-			assert(gamea.manager[nr].match_summary.club[i].substitutions_remaining < 3);
+			assert(club.always_null == 0);
+
+			printf("always_null: %04x\n", club.always_null);
+			printf("Substitutions remaining: %d\n", club.substitutions_remaining);
+			printf("other remaining: %d\n", club.other);
+
+			assert(club.substitutions_remaining < 3);
 
 			printf("Home/Away magic: %04x\n",
-				gamea.manager[nr].match_summary.club[i].home_away_data);
+				club.home_away_data);
 
-			if (gamea.manager[nr].match_summary.club[i].club_idx == 0x0062 && i == 0)
-				assert(gamea.manager[nr].match_summary.club[i].home_away_data == 0x5738);
-			if (gamea.manager[nr].match_summary.club[i].club_idx == 0x0062 && i == 1)
-				assert(gamea.manager[nr].match_summary.club[i].home_away_data == 0x91f8);
+			if (i == 0 && club.club_idx == 0x0062)
+				assert(club.home_away_data == 0x5738);
 
-			printf("---- /club data ----\n");
-			printf("\n");
-
+			if (i == 1 && club.club_idx == 0x0062)
+				assert(club.home_away_data == 0x91f8);
 		}
+
 
 		static const char *weather[] = {
 			"", /* 00 */
@@ -1765,38 +1804,38 @@ void dump_gamea() {
 			"light winds" /* 14 */
 		};
 
-		printf("Weather: (%04x) %s\n", gamea.manager[nr].match_summary.weather, weather[gamea.manager[nr].match_summary.weather]);
+		printf("Weather: (%04x) %s\n", ms.weather, weather[ms.weather]);
 
-		if (gamea.manager[nr].match_summary.referee_idx == -1)
-			printf("Referee: %d", gamea.manager[nr].match_summary.referee_idx);
+		if (ms.referee_idx == -1)
+			printf("Referee: %d", ms.referee_idx);
 		else
-			printf("Referee: (%02x)%14.14s\n",
-				gamea.manager[nr].match_summary.referee_idx,
-				gamea.referee[ gamea.manager[nr].match_summary.referee_idx ].name
+			printf("Referee: (%02x) %14.14s\n",
+				ms.referee_idx,
+				gamea.referee[ms.referee_idx].name
 			);
 
-		for (int i = 0; i < sizeof(gamea.manager[nr].match_summary.data156); ++i) {
+		for (int i = 0; i < sizeof (ms.data156); ++i) {
 			if ( i % 16 == 0 )
 				printf("\n[%03d] ", i);
-			printf("%02x ", gamea.manager[nr].match_summary.data156[i]);
+			printf("%02x ", ms.data156[i]);
 		}
 		printf("\n");
 
-		printf("Match type: (%02x)", gamea.manager[nr].match_summary.match_type);
+		printf("Match type: (%02x)", ms.match_type);
 
-		for (int i = 0; i < sizeof (gamea.manager[nr].match_summary.data157); ++i) {
+		for (int i = 0; i < sizeof (ms.data157); ++i) {
 			if ( i % 16 == 0 )
 				printf("\n[%03d] ", i);
-			printf("%02x ", gamea.manager[nr].match_summary.data157[i]);
+			printf("%02x ", ms.data157[i]);
 		}
 		printf("\n");
 
-		printf("audience %d\n", gamea.manager[nr].match_summary.audience);
+		printf("audience %d\n", ms.audience);
 
-		for (int i = 0; i < sizeof (gamea.manager[nr].match_summary.data158); ++i) {
+		for (int i = 0; i < sizeof (ms.data158); ++i) {
 			if ( i % 16 == 0 )
 				printf("\n[%03d] ", i);
-			printf("%02x ", gamea.manager[nr].match_summary.data158[i]);
+			printf("%02x ", ms.data158[i]);
 		}
 		printf("\n\n");
 
@@ -1810,35 +1849,21 @@ void dump_gamea() {
 
 		printf("Year Div   (0000)Club             PS PL  W  D  L  GD PTS\n");
 		for (int i = 0; i < 20; ++i) {
-			if (gamea.manager[nr].league_history[i].year == 0)
+			struct gamea::manager::league_history &lh = manager.league_history[i];
+
+			if (lh.year == 0)
 				continue;
-			printf(
-				"%4d %5.5s (%04x)%16.16s %2d %2d %2d %2d %2d %3d %3d "
-				"%02x %02x %02x %02x %02x %02x %02x %02x "
-				"%02x %02x %02x %02x\n",
-				gamea.manager[nr].league_history[i].year,
-				div[ gamea.manager[nr].league_history[i].div ],
-				gamea.manager[nr].league_history[i].club_idx,
-				gameb.club[ gamea.manager[nr].league_history[i].club_idx ].name,
-				gamea.manager[nr].league_history[i].ps,
-				gamea.manager[nr].league_history[i].p,
-				gamea.manager[nr].league_history[i].w,
-				gamea.manager[nr].league_history[i].d,
-				gamea.manager[nr].league_history[i].l,
-				gamea.manager[nr].league_history[i].gd,
-				gamea.manager[nr].league_history[i].pts,
-				gamea.manager[nr].league_history[i].unk21,
-				gamea.manager[nr].league_history[i].unk22,
-				gamea.manager[nr].league_history[i].unk23,
-				gamea.manager[nr].league_history[i].unk24,
-				gamea.manager[nr].league_history[i].unk25,
-				gamea.manager[nr].league_history[i].unk26,
-				gamea.manager[nr].league_history[i].unk27,
-				gamea.manager[nr].league_history[i].unk28,
-				gamea.manager[nr].league_history[i].unk29,
-				gamea.manager[nr].league_history[i].unk30,
-				gamea.manager[nr].league_history[i].unk31,
-				gamea.manager[nr].league_history[i].unk32);
+
+			printf("%4d %5.5s (%04x)%16.16s %2d %2d %2d %2d %2d %3d %3d",
+				lh.year, div[lh.div], lh.club_idx, gameb.club[lh.club_idx].name,
+				lh.ps, lh.p, lh.w, lh.d, lh.l, lh.gd, lh.pts);
+
+			printf(" %02x %02x %02x %02x"
+			       " %02x %02x %02x %02x"
+			       " %02x %02x %02x %02x\n",
+				lh.unk21, lh.unk22, lh.unk23, lh.unk24,
+				lh.unk25, lh.unk26, lh.unk27, lh.unk28,
+				lh.unk29, lh.unk30, lh.unk31, lh.unk32);
 		}
 
 		static const char *match_type[] = {
@@ -1859,97 +1884,83 @@ void dump_gamea() {
 		for (int i = 0; i < 5; ++i) {
 			printf("%-14.14s %3d %3d  %-15.15s %3d %3d\n",
 				match_type[i],
-				gamea.manager[nr].titles[i].won,
-				gamea.manager[nr].titles[i].yrs,
+				manager.titles[i].won,
+				manager.titles[i].yrs,
 
 				match_type[5 + i],
-				gamea.manager[nr].titles[5 + i].won,
-				gamea.manager[nr].titles[5 + i].yrs
+				manager.titles[5 + i].won,
+				manager.titles[5 + i].yrs
 			);
 		}
 		printf("                        %-15.15s %3d %3d\n\n",
 			match_type[10],
-			gamea.manager[nr].titles[10].won,
-			gamea.manager[nr].titles[10].yrs);
+			manager.titles[10].won,
+			manager.titles[10].yrs);
 
 		printf("Match type       Play  Won Drew Lost   For   Agn\n");
 		for (int i = 0; i < 11; ++i)
 			printf("%-15.15s  %4d %4d %4d %4d  %4d  %4d\n",
 				match_type[i],
-				gamea.manager[nr].manager_history[i].play,
-				gamea.manager[nr].manager_history[i].won,
-				gamea.manager[nr].manager_history[i].drew,
-				gamea.manager[nr].manager_history[i].lost,
-				gamea.manager[nr].manager_history[i].forx,
-				gamea.manager[nr].manager_history[i].agn);
+				manager.manager_history[i].play,
+				manager.manager_history[i].won,
+				manager.manager_history[i].drew,
+				manager.manager_history[i].lost,
+				manager.manager_history[i].forx,
+				manager.manager_history[i].agn);
 		printf("\n");
 
-		for (int i = 0; i < sizeof( gamea.manager[nr].data159 ); ++i) {
+		for (int i = 0; i < sizeof (manager.data159); ++i) {
 			if ( i % 16 == 0 )
 				printf("\n[%03d] ", i);
-			printf("%02x ", gamea.manager[nr].data159[i]);
+			printf("%02x ", manager.data159[i]);
 		}
 		printf("\n");
 
 		printf("       Previous clubs   From To   Mngr Drct Sprt\n");
 		for (int i = 0; i < 4; ++i) {
 			printf("(%04x) %16.16s %4d %4d %3d%% %3d%% %3d%%\n",
-				gamea.manager[nr].previous_clubs[i].club_idx,
-				gameb.club[gamea.manager[nr].previous_clubs[i].club_idx].name,
-				gamea.manager[nr].previous_clubs[i].year_from,
-				gamea.manager[nr].previous_clubs[i].year_to,
-				gamea.manager[nr].previous_clubs[i].mngr,
-				gamea.manager[nr].previous_clubs[i].drct,
-				gamea.manager[nr].previous_clubs[i].sprt
+				manager.previous_clubs[i].club_idx,
+				gameb.club[manager.previous_clubs[i].club_idx].name,
+				manager.previous_clubs[i].year_from,
+				manager.previous_clubs[i].year_to,
+				manager.previous_clubs[i].mngr,
+				manager.previous_clubs[i].drct,
+				manager.previous_clubs[i].sprt
 			);
 		}
 
-		printf("Current club start year: %4d\n", gamea.manager[nr].year_start_cur_club);
+		printf("Current club start year: %4d\n", manager.year_start_cur_club);
 
 		printf("Manager of the month awards.%d\n",
-			gamea.manager[nr].manager_of_the_month_awards);
+			manager.manager_of_the_month_awards);
 
 		printf("Manager of the year awards..%d\n",
-			gamea.manager[nr].manager_of_the_year_awards);
+			manager.manager_of_the_year_awards);
 
 		for (int i = 0; i < 242; ++i)
 			printf("(%04x)%16.16s %2d %2d %2d %2d %2d %2d %2d\n",
-				gamea.manager[nr].match_history[i].club,
-				gameb.club[ gamea.manager[nr].match_history[i].club ].name,
-				gamea.manager[nr].match_history[i].played,
-				gamea.manager[nr].match_history[i].won,
-				gamea.manager[nr].match_history[i].u3,
-				gamea.manager[nr].match_history[i].goals_f,
-				gamea.manager[nr].match_history[i].u5,
-				gamea.manager[nr].match_history[i].goals_a,
-				gamea.manager[nr].match_history[i].u7);
+				manager.match_history[i].club,
+				gameb.club[manager.match_history[i].club].name,
+				manager.match_history[i].played,
+				manager.match_history[i].won,
+				manager.match_history[i].u3,
+				manager.match_history[i].goals_f,
+				manager.match_history[i].u5,
+				manager.match_history[i].goals_a,
+				manager.match_history[i].u7);
 		printf("\n");
 
 
-		for (int i = 0; i < sizeof( gamea.manager[nr].data160 ); ++i) {
+		for (int i = 0; i < sizeof (manager.data160); ++i) {
 			if ( i % 16 == 0 )
 				printf("\n[%03d] ", i);
-			printf("%02x ", gamea.manager[nr].data160[i]);
+			printf("%02x ", manager.data160[i]);
 		}
 		printf("\n");
 
 		for ( int i = 0; i < 8; ++i )
-			printf("tactic[%d].name: %20.20s\n", i, gamea.manager[nr].tactic[i].name);
+			printf("tactic[%d].name: %20.20s\n", i, manager.tactic[i].name);
 		printf("\n");
-
-	}
-
-	for (int i = 0; i < sizeof( gamea.data200 ); ++i) {
-		if ( i % 16 == 0 )
-			printf("\n[%03d] ", i);
-		printf("%02x ", gamea.data200[i]);
-	}
-	printf("\n");
-
-	printf("inc_number1: %d\n", gamea.inc_number1);
-	printf("inc_number2: %d\n", gamea.inc_number2);
-	printf("inc_number3: %d\n", gamea.inc_number3);
-
 }
 
 void dump_gameb(struct gameb *gb) {
@@ -2473,11 +2484,20 @@ void dump_gamea_match_summary()
 		printf("\n\n");
 }
 
-void soup_up() {
+void soup_up(int player) {
 	printf("Souping up!");
 
-	print_club_name(gamea.manager[0].club_idx);
-	struct gameb::club &club = gameb.club[ gamea.manager[0].club_idx ];
+	struct gamea::manager &manager = gamea.manager[player];
+
+	print_club_name(manager.club_idx);
+
+	//for (int i = 0; i < 20; ++i) {
+	//	struct gamea::manager::employee &employee = manager.employee[i];
+	//	if (employee.skill)
+	//		employee.skill = 99;
+	//}
+
+	struct gameb::club &club = gameb.club[ manager.club_idx ];
 
 	for (int p = 0; p < 24; ++p) {
 		if (club.player_index[p] == -1)
