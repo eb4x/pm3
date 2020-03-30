@@ -562,6 +562,7 @@ void fax_match_summary();
 
 void dump_gameb(struct gameb *gb);
 void dump_club(struct gameb::club *c);
+void print_club_name(int16_t idx, bool newline = true);
 
 void dump_gamec(struct gamec *gc);
 void dump_player(struct gamec::player *p, int32_t idx);
@@ -579,6 +580,8 @@ void print_help(char *command) {
 	fprintf(stderr, "  [ /path/to/saves/ ]\n");
 	fprintf(stderr, "    optionally provide a path to saves\n");
 }
+
+void soup_up();
 
 int main(int argc, char *argv[])
 {
@@ -599,7 +602,7 @@ int main(int argc, char *argv[])
 		{ 0, 0, 0, 0 }
 	};
 
-	while ((c = getopt_long(argc, argv, "abcg:h", long_options, &optindex)) != -1) {
+	while ((c = getopt_long(argc, argv, "abcg:hs", long_options, &optindex)) != -1) {
 		switch (c) {
 			case 'a': opt_dump_gamea = 1;     break;
 			case 'b': opt_dump_gameb = 1;     break;
@@ -630,38 +633,35 @@ int main(int argc, char *argv[])
 	assert(sizeof (struct gameb::club)   == 0x023A);
 	assert(sizeof (struct gamec::player) == 0x0028);
 
-	char *gamexa = NULL;
+	char *gamexa = NULL, *gamexb = NULL, *gamexc = NULL;
+	FILE *fga = NULL,    *fgb = NULL,    *fgc = NULL;
+
 	size_t gamexa_len = asprintf(&gamexa, "%sGAME%.1dA", path != NULL ? path : "", game_nr);
-	FILE *fga = fopen(gamexa, "r");
+	fga = fopen(gamexa, "r");
 	if (fga == NULL) {
 		printf("Could not open file: %s\n", gamexa);
 		exit(EXIT_FAILURE);
 	}
 	fread(&gamea, sizeof (struct gamea), 1, fga);
 	fclose(fga);
-	free(gamexa);
 
-	char *gamexb = NULL;
 	size_t gamexb_len = asprintf(&gamexb, "%sGAME%.1dB", path != NULL ? path : "", game_nr);
-	FILE *fgb = fopen(gamexb, "r");
+	fgb = fopen(gamexb, "r");
 	if (fgb == NULL) {
 		printf("Could not open file: %s\n", gamexb);
 		exit(EXIT_FAILURE);
 	}
 	fread(&gameb, sizeof (struct gameb), 1, fgb);
 	fclose(fgb);
-	free(gamexb);
 
-	char *gamexc = NULL;
 	size_t gamexc_len = asprintf(&gamexc, "%sGAME%.1dC", path != NULL ? path : "", game_nr);
-	FILE *fgc = fopen(gamexc, "r");
+	fgc = fopen(gamexc, "r");
 	if (fgb == NULL) {
 		printf("Could not open file: %s\n", gamexc);
 		exit(EXIT_FAILURE);
 	}
 	fread(&gamec, sizeof (struct gamec), 1, fgc);
 	fclose(fgc);
-	free(gamexc);
 
 	if ( opt_dump_gamea ) {
 		printf("GAME%dA\n", game_nr);
@@ -681,73 +681,24 @@ int main(int argc, char *argv[])
 	fax_match_summary();
 
 	if ( opt_soup_up ) {
-		printf("Souping up GAME%d\n", game_nr);
-		int16_t club_idx = gamea.manager[0].club_idx;
+		soup_up();
 
-		for (int p = 0; p < 24; ++p) {
-			int16_t player_idx = gameb.club[ club_idx ].player_index[p];
+		fga = fopen(gamexa, "w+");
+		fwrite(&gamea, sizeof (struct gamea), 1, fga);
+		fclose(fga);
 
-			if (player_idx == -1)
-				continue;
+		fgb = fopen(gamexb, "w+");
+		fwrite(&gameb, sizeof (struct gameb), 1, fgb);
+		fclose(fgb);
 
-			gamec.player[ player_idx ].hn = 97;
-			gamec.player[ player_idx ].tk = 97;
-			gamec.player[ player_idx ].ps = 97;
-			gamec.player[ player_idx ].sh = 97;
-
-			switch ( p ) {
-				case  0:
-				case 11:
-				case 15:
-					gamec.player[ player_idx ].hn = 99; break;
-
-				case  1:
-				case  2:
-				case  4:
-				case  5:
-				case 12:
-				case 16:
-				case 19:
-				case 22:
-					gamec.player[ player_idx ].tk = 99; break;
-
-				case  3:
-				case 10:
-				case 13:
-				case 17:
-				case 20:
-					gamec.player[ player_idx ].ps = 99; break;
-
-				case  6:
-				case  7:
-				case  8:
-				case  9:
-				case 14:
-				case 18:
-				case 21:
-				case 23:
-					gamec.player[ player_idx ].sh = 99; break;
-
-				default: break;
-			}
-
-			gamec.player[ player_idx ].hd = 99;
-			gamec.player[ player_idx ].cr = 99;
-			gamec.player[ player_idx ].ft = 99;
-		}
-
-		FILE *fga2 = fopen(gamexa, "w+");
-		fwrite(&gamea, sizeof (struct gamea), 1, fga2);
-		fclose(fga2);
-
-		FILE *fgb2 = fopen(gamexb, "w+");
-		fwrite(&gameb, sizeof (struct gameb), 1, fgb2);
-		fclose(fgb2);
-
-		FILE *fgc2 = fopen(gamexc, "w+");
-		fwrite(&gamec, sizeof (struct gamec), 1, fgc2);
-		fclose(fgc2);
+		fgc = fopen(gamexc, "w+");
+		fwrite(&gamec, sizeof (struct gamec), 1, fgc);
+		fclose(fgc);
 	}
+
+	free(gamexa);
+	free(gamexb);
+	free(gamexc);
 
 	return EXIT_SUCCESS;
 }
@@ -2106,6 +2057,15 @@ void dump_club(struct gameb::club *c) {
 */
 }
 
+void print_club_name(int16_t idx, bool newline) {
+	assert( idx >= -1 && idx < 244);
+
+	if (idx == -1)
+		printf("Club: %d%s", idx, newline ? "\n" : "");
+	else
+		printf("Club: %16.16s%s", gameb.club[idx].name, newline ? "\n" : "");
+}
+
 void dump_gamec(struct gamec *gc) {
 	for (int i = 0; i < 3932; ++i)
 		dump_player(&gc->player[i], i);
@@ -2519,4 +2479,65 @@ void dump_gamea_match_summary()
 		printf("\n\n");
 }
 
+void soup_up() {
+	printf("Souping up!");
+
+	print_club_name(gamea.manager[0].club_idx);
+	struct gameb::club &club = gameb.club[ gamea.manager[0].club_idx ];
+
+	for (int p = 0; p < 24; ++p) {
+		if (club.player_index[p] == -1)
+			continue;
+
+		print_player_name(club.player_index[p]);
+		struct gamec::player &player = gamec.player[ club.player_index[p] ];
+
+		player.hn = 97;
+		player.tk = 97;
+		player.ps = 97;
+		player.sh = 97;
+
+		switch ( p ) {
+			case  0:
+			case 11:
+			case 15:
+				player.hn = 99; break;
+
+			case  1:
+			case  2:
+			case  4:
+			case  5:
+			case 12:
+			case 16:
+			case 19:
+			case 22:
+				player.tk = 99; break;
+
+			case  3:
+			case 10:
+			case 13:
+			case 17:
+			case 20:
+				player.ps = 99; break;
+
+			case  6:
+			case  7:
+			case  8:
+			case  9:
+			case 14:
+			case 18:
+			case 21:
+			case 23:
+				player.sh = 99; break;
+
+			default: break;
+		}
+
+		player.hd = 99;
+		player.cr = 99;
+		player.ft = 99;
+
+		player.morl = 8;
+	}
+}
 // vim: ts=3 nowrap
