@@ -1323,12 +1323,42 @@ void dump_gamea_manager(int player) {
 		"Coach [SH]",
 	};
 
-	printf("Employees\n");
+	static const char *rating[] = {
+		"Fair *",       //  0 -  4
+		"Fair **",      //  5 -  9
+		"Fair ***",     // 10 - 14
+		"Fair ****",    // 15 - 19
+		"Fair *****",   // 20 - 24
+		"Good *",       // 25 - 29
+		"Good **",      // 30 - 34
+		"Good ***",     // 35 - 39
+		"Good ****",    // 40 - 44
+		"Good *****",   // 45 - 49
+		"V.Good *",     // 50 - 54
+		"V.Good **",    // 55 - 59
+		"V.Good ***",   // 60 - 64
+		"V.Good ****",  // 65 - 69
+		"V.Good *****", // 70 - 74
+		"Superb",       // 75 - 79
+		"Outstanding",  // 80 - 84
+		"World class",  // 85 - 89
+		"Exceptional",  // 90 - 94
+		"The ultimate", // 95 - 99
+	};
+
+	printf("Your employees Type       Rating       Wage  Ag\n");
 	for (int i = 0; i < 20; ++i) {
 		struct gamea::manager::employee &employee = manager.employee[i];
-		printf("%2d: %14.14s Age: %d Skill: %2d Type: %s\n",
-			i, employee.name, 40 + employee.age, employee.skill, type[ employee.type ] );
 
+		if (i == 12)
+			printf("\nVacancies      Type       Rating       Wage  Ag\n");
+
+		printf("%14.14s %10.10s %-12.12s %5d %2d\n",
+			employee.name,
+			type[employee.type],
+			rating[(employee.skill - (employee.skill % 5)) / 5],
+			employee.skill, // needs to be a formula
+			40 + employee.age);
 	}
 
 	static const char *nyn[] = { "N/A", "Yes", "No" };
@@ -1376,24 +1406,6 @@ void dump_gamea_manager(int player) {
 		"Right",
 		"Both",
 		"Any"
-	};
-
-	static const char *rating[] = {
-		"Fair *",
-		"Fair **",
-		"Fair ***",
-		"Fair ****",
-		"Fair *****",
-		"Good *",
-		"Good **",
-		"Good ***",
-		"Good ****",
-		"Good *****",
-		"V.Good *",
-		"V.Good **",
-		"V.Good ***",
-		"V.Good ****",
-		"V.Good *****"
 	};
 
 	printf("Scouts\n");
@@ -2491,11 +2503,12 @@ void soup_up(int player) {
 
 	print_club_name(manager.club_idx);
 
-	//for (int i = 0; i < 20; ++i) {
-	//	struct gamea::manager::employee &employee = manager.employee[i];
-	//	if (employee.skill)
-	//		employee.skill = 99;
-	//}
+	for (int i = 0; i < 20; ++i) {
+		struct gamea::manager::employee &employee = manager.employee[i];
+		printf("Employee: %14.14s\n", employee.name);
+		employee.skill = 99;
+		//employee.age = i % 16;
+	}
 
 	struct gameb::club &club = gameb.club[ manager.club_idx ];
 
