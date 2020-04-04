@@ -242,68 +242,74 @@ struct gamea {
 		int16_t unknown_player_idx[2];
 		uint8_t data150[576];
 
-		struct {
-			char string[20];
-		} __attribute__ ((packed)) stadium[4];
+		struct stadium {
+			struct {
+				char name[20];
+			} __attribute__ ((packed)) stand[4];
 
-		struct {
-			uint8_t level : 3;
-			uint8_t time  : 5;
-		} __attribute__ ((packed)) seating_build[4];
+			struct {
+				uint8_t level : 3;
+				uint8_t time  : 5;
+			} __attribute__ ((packed)) seating_build[4];
 
-		struct {
-			uint8_t level : 3;
-			uint8_t time  : 5;
-		} __attribute__ ((packed)) seating[4];
+			struct {
+				uint8_t level : 3; /* terraces, wooden seating, plastic seating */
+				uint8_t time  : 5;
+			} __attribute__ ((packed)) conversion[4];
 
-		struct {
-			uint8_t level : 3;
-			uint8_t time  : 5;
-		} __attribute__ ((packed)) area_covering[4];
+			struct {
+				uint8_t level : 3;
+				uint8_t time  : 5;
+			} __attribute__ ((packed)) area_covering[4];
 
-		struct {
-			uint32_t level :  3;
-			uint32_t time  : 29;
-		} __attribute__ ((packed)) ground_facilities;
+			struct {
+				uint32_t level :  3;
+				uint32_t time  : 29;
+			} __attribute__ ((packed)) ground_facilities;
 
-		struct {
-			uint32_t level :  3;
-			uint32_t time  : 29;
-		} __attribute__ ((packed)) supporters_club;
+			struct {
+				uint32_t level :  3;
+				uint32_t time  : 29;
+			} __attribute__ ((packed)) supporters_club;
 
-		struct {
-			uint32_t level :  3;
-			uint32_t time  : 29;
-		} __attribute__ ((packed)) flood_lights;
+			struct {
+				uint32_t level :  3;
+				uint32_t time  : 29;
+			} __attribute__ ((packed)) flood_lights;
 
-		struct {
-			uint32_t level :  3;
-			uint32_t time  : 29;
-		} __attribute__ ((packed)) scoreboard;
+			struct {
+				uint32_t level :  3;
+				uint32_t time  : 29;
+			} __attribute__ ((packed)) scoreboard;
 
-		struct {
-			uint32_t level :  3;
-			uint32_t time  : 29;
-		} __attribute__ ((packed)) undersoil_heating;
+			struct {
+				uint32_t level :  3;
+				uint32_t time  : 29;
+			} __attribute__ ((packed)) undersoil_heating;
 
-		struct {
-			uint32_t level :  3;
-			uint32_t time  : 29;
-		} __attribute__ ((packed)) changing_rooms;
+			struct {
+				uint32_t level :  3;
+				uint32_t time  : 29;
+			} __attribute__ ((packed)) changing_rooms;
 
-		struct {
-			uint32_t level :  3;
-			uint32_t time  : 29;
-		} __attribute__ ((packed)) gymnasium;
+			struct {
+				uint32_t level :  3;
+				uint32_t time  : 29;
+			} __attribute__ ((packed)) gymnasium;
 
-		struct {
-			uint32_t level :  3;
-			uint32_t time  : 29;
-		} __attribute__ ((packed)) car_park;
+			struct {
+				uint32_t level :  3;
+				uint32_t time  : 29;
+			} __attribute__ ((packed)) car_park;
 
-		uint8_t safety_rating[4];
+			uint8_t safety_rating[4];
 
-		uint16_t seating_capacity[4];
+			struct {
+				uint16_t seating: 15;
+				uint16_t terraces: 1;
+			} __attribute__ ((packed)) capacity[4];
+
+		} __attribute__ ((packed)) stadium;
 
 		int16_t numb01;
 		int16_t numb02;
@@ -1528,43 +1534,37 @@ void dump_gamea_manager(int player) {
 		}
 		printf("\n");
 
-		for ( int i = 0; i < 4; ++i )
-			printf("stadium[%d].string: %20.20s\n", i, manager.stadium[i].string);
+		struct gamea::manager::stadium &stadium = manager.stadium;
+
+		printf("Construction\n");
+		for (int i = 0; i < 4; ++i) {
+			printf("[%20.20s] expand_capacity = %d, %d\n",
+				stadium.stand[i].name, stadium.seating_build[i].level, stadium.seating_build[i].time);
+			printf("[%20.20s] convert_to_seating = %d, %d\n",
+				stadium.stand[i].name, stadium.conversion[i].level, stadium.conversion[i].time);
+			printf("[%20.20s] area_covering = %d, %d\n",
+				stadium.stand[i].name, stadium.area_covering[i].level, stadium.area_covering[i].time);
+			printf("\n");
+		}
+
+		printf("ground_facilities = %d, %d\n", stadium.ground_facilities.level, stadium.ground_facilities.time);
+		printf("supporters_club   = %d, %d\n", stadium.supporters_club.level,   stadium.supporters_club.time);
+		printf("flood_lights      = %d, %d\n", stadium.flood_lights.level,      stadium.flood_lights.time);
+		printf("scoreboard        = %d, %d\n", stadium.scoreboard.level,        stadium.scoreboard.time);
+		printf("undersoil_heating = %d, %d\n", stadium.undersoil_heating.level, stadium.undersoil_heating.time);
+		printf("changing_rooms    = %d, %d\n", stadium.changing_rooms.level,    stadium.changing_rooms.time);
+		printf("gymnasium         = %d, %d\n", stadium.gymnasium.level,         stadium.gymnasium.time);
+		printf("car_park          = %d, %d\n", stadium.car_park.level,          stadium.car_park.time);
+
+		printf("safety rating     =");
+		for (int i = 0; i < sizeof (stadium.safety_rating); ++i)
+			printf(" %02x", stadium.safety_rating[i]);
 		printf("\n");
 
-		printf("seating_build[north] = %d, %d\n", manager.seating_build[0].level, manager.seating_build[0].time);
-		printf("seating_build[east ] = %d, %d\n", manager.seating_build[1].level, manager.seating_build[1].time);
-		printf("seating_build[south] = %d, %d\n", manager.seating_build[2].level, manager.seating_build[2].time);
-		printf("seating_build[west ] = %d, %d\n", manager.seating_build[3].level, manager.seating_build[3].time);
-
-		printf("seating[north] = %d, %d\n", manager.seating[0].level, manager.seating[0].time);
-		printf("seating[east ] = %d, %d\n", manager.seating[1].level, manager.seating[1].time);
-		printf("seating[south] = %d, %d\n", manager.seating[2].level, manager.seating[2].time);
-		printf("seating[west ] = %d, %d\n", manager.seating[3].level, manager.seating[3].time);
-
-		printf("area_covering[north] = %d, %d\n", manager.area_covering[0].level, manager.area_covering[0].time);
-		printf("area_covering[east ] = %d, %d\n", manager.area_covering[1].level, manager.area_covering[1].time);
-		printf("area_covering[south] = %d, %d\n", manager.area_covering[2].level, manager.area_covering[2].time);
-		printf("area_covering[west ] = %d, %d\n", manager.area_covering[3].level, manager.area_covering[3].time);
-
-		printf("ground_facilities = %d, %d\n", manager.ground_facilities.level, manager.ground_facilities.time);
-		printf("supporters_club   = %d, %d\n", manager.supporters_club.level,   manager.supporters_club.time);
-		printf("flood_lights      = %d, %d\n", manager.flood_lights.level,      manager.flood_lights.time);
-		printf("scoreboard        = %d, %d\n", manager.scoreboard.level,        manager.scoreboard.time);
-		printf("undersoil_heating = %d, %d\n", manager.undersoil_heating.level, manager.undersoil_heating.time);
-		printf("changing_rooms    = %d, %d\n", manager.changing_rooms.level,    manager.changing_rooms.time);
-		printf("gymnasium         = %d, %d\n", manager.gymnasium.level,         manager.gymnasium.time);
-		printf("car_park          = %d, %d\n", manager.car_park.level,          manager.car_park.time);
-
-		printf("safety rating     = ");
-		for (int i = 0; i < sizeof (manager.safety_rating); ++i)
-			printf("%02x ", manager.safety_rating[i]);
-		printf("\n");
-
-		printf("seating_capacity[north] = %5d\n", manager.seating_capacity[0]);
-		printf("seating_capacity[east ] = %5d\n", manager.seating_capacity[1]);
-		printf("seating_capacity[south] = %5d\n", manager.seating_capacity[2]);
-		printf("seating_capacity[west ] = %5d\n", manager.seating_capacity[3]);
+		for (int i = 0; i < 4; ++i) {
+			printf("[%20.20s] capacity = %5d %s\n",
+				stadium.stand[i].name, stadium.capacity[i].seating, stadium.capacity[i].terraces ? "terraces" : "seating");
+		}
 
 		printf("Numb01: %5d\nNumb02: %5d\nNumb03: %5d\nNumb04: %5d\n",
 			manager.numb01, manager.numb02,
