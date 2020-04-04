@@ -63,7 +63,7 @@ struct gamea {
 	} __attribute__ ((packed)) referee[64];
 
 
-	union {
+	union cuppy {
 		struct {
 			struct { struct { int16_t idx; int16_t goals; int32_t audience; } __attribute__ ((packed)) club[2]; } __attribute__ ((packed)) the_fa_cup[36];
 			struct { struct { int16_t idx; int16_t goals; int32_t audience; } __attribute__ ((packed)) club[2]; } __attribute__ ((packed)) the_league_cup[28];
@@ -73,10 +73,8 @@ struct gamea {
 			struct { struct { int16_t idx; int16_t goals; int32_t audience; } __attribute__ ((packed)) club[2]; } __attribute__ ((packed)) the_cup_winners_cup[16];
 			struct { struct { int16_t idx; int16_t goals; int32_t audience; } __attribute__ ((packed)) club[2]; } __attribute__ ((packed)) the_uefa_cup[32];
 			struct { struct { int16_t idx; int16_t goals; int32_t audience; } __attribute__ ((packed)) club[2]; } __attribute__ ((packed)) the_charity_shield;
-//			struct { struct { int16_t idx; int16_t goals; int32_t audience; } __attribute__ ((packed)) club[2]; } __attribute__ ((packed)) data094[8];
-//			struct { struct { int16_t idx; int16_t goals; int32_t audience; } __attribute__ ((packed)) club[2]; } __attribute__ ((packed)) the_charity_shield_fixtures[2];
 		} __attribute__ ((packed));
-		struct { struct { int16_t idx; int16_t goals; int32_t audience; } __attribute__ ((packed)) club[2]; } __attribute__ ((packed)) all[149];
+		struct cup_entry { struct { int16_t idx; int16_t goals; int32_t audience; } __attribute__ ((packed)) club[2]; } __attribute__ ((packed)) all[149];
 	} __attribute__ ((packed)) cuppy;
 
 	uint8_t data095[2240];
@@ -868,99 +866,36 @@ void dump_gamea() {
 	}
 	printf("\n");
 
-	printf("the f.a. cup\n");
-	printf("XXX round\n");
-	for (int i = 0; i < 36; ++i) {
-		assert( gamea.cuppy.the_fa_cup[i].club[0].idx != -1 && gamea.cuppy.the_fa_cup[i].club[1].idx != -1 &&
-		        gamea.cuppy.the_fa_cup[i].club[0].idx < 245 && gamea.cuppy.the_fa_cup[i].club[1].idx < 245 );
+	for (int i = 0; i < 149; ++i) {
+		switch (i) {
+			case   0: printf("the f.a. cup\n");        break;
+			case  36: printf("the league cup\n");      break;
+			case  64: printf("data090\n");             break;
+			case  68: printf("the champions cup\n");   break;
+			case  84: printf("data091\n");             break;
+			case 100: printf("the cup winners cup\n"); break;
+			case 116: printf("the u.e.f.a. cup\n");    break;
+			case 148: printf("the charity sheld\n");   break;
+		}
 
-		struct gameb::club &home_club = gameb.club[ gamea.cuppy.the_fa_cup[i].club[0].idx ];
-		struct gameb::club &away_club = gameb.club[ gamea.cuppy.the_fa_cup[i].club[1].idx ];
+		struct gamea::cuppy::cup_entry &cup_entry = gamea.cuppy.all[i];
+
+		if (cup_entry.club[0].idx ==  -1 || cup_entry.club[1].idx ==  -1 ||
+		    cup_entry.club[0].idx >= 245 || cup_entry.club[1].idx >= 245 ) {
+			printf("XXX: idx: %d, goals: %d, audience: %d - idx: %d, goals: %d, audience: %d\n",
+				cup_entry.club[0].idx, cup_entry.club[0].goals, cup_entry.club[0].audience,
+				cup_entry.club[1].idx, cup_entry.club[1].goals, cup_entry.club[1].audience);
+			continue;
+		}
+
+		struct gameb::club &home_club = get_club(cup_entry.club[0].idx);
+		struct gameb::club &away_club = get_club(cup_entry.club[1].idx);
 
 		printf("%3.3s:%16.16s - %3.3s:%16.16s\nat %24.24s\n",
 			"XXX", home_club.name,
 			"XXX", away_club.name,
 			home_club.stadium);
 	}
-	printf("\n");
-
-	printf("the league cup\n");
-	printf("XXX round leg X\n");
-	for (int i = 0; i < 28; ++i) {
-		assert( gamea.cuppy.the_league_cup[i].club[0].idx != -1 && gamea.cuppy.the_league_cup[i].club[1].idx != -1 &&
-		        gamea.cuppy.the_league_cup[i].club[0].idx < 245 && gamea.cuppy.the_league_cup[i].club[1].idx < 245 );
-
-		printf("%3.3s:%16.16s - %3.3s:%16.16s\nat %24.24s\n",
-			"XXX", gameb.club[ gamea.cuppy.the_league_cup[i].club[0].idx ].name,
-			"XXX", gameb.club[ gamea.cuppy.the_league_cup[i].club[1].idx ].name,
-			gameb.club[ gamea.cuppy.the_league_cup[i].club[0].idx ].stadium);
-	}
-	printf("\n");
-
-	printf("\n--data090--");
-	for (int i = 0; i < sizeof( gamea.cuppy.data090 ); ++i) {
-		if ( i % 16 == 0 )
-			printf("\n[%04d]", i);
-		printf(" %02x", gamea.cuppy.data090[i]);
-	}
-	printf("\n\n");
-
-	printf("the champions cup\n");
-	printf("XXX round leg X\n");
-	for (int i = 0; i < 16; ++i) {
-		assert( gamea.cuppy.the_champions_cup[i].club[0].idx != -1 && gamea.cuppy.the_champions_cup[i].club[1].idx != -1 &&
-		        gamea.cuppy.the_champions_cup[i].club[0].idx < 245 && gamea.cuppy.the_champions_cup[i].club[1].idx < 245 );
-
-		printf("%3.3s:%16.16s - %3.3s:%16.16s\nat %24.24s\n",
-			"XXX", gameb.club[ gamea.cuppy.the_champions_cup[i].club[0].idx ].name,
-			"XXX", gameb.club[ gamea.cuppy.the_champions_cup[i].club[1].idx ].name,
-			gameb.club[ gamea.cuppy.the_champions_cup[i].club[0].idx ].stadium);
-	}
-	printf("\n");
-
-	printf("\n--data091--");
-	for (int i = 0; i < sizeof( gamea.cuppy.data091 ); ++i) {
-		if ( i % 16 == 0 )
-			printf("\n[%04d]", i);
-		printf(" %02x", gamea.cuppy.data091[i]);
-	}
-	printf("\n\n");
-
-	printf("the cup winners cup\n");
-	printf("XXX round leg X\n");
-	for (int i = 0; i < 16; ++i) {
-		assert( gamea.cuppy.the_cup_winners_cup[i].club[0].idx != -1 && gamea.cuppy.the_cup_winners_cup[i].club[1].idx != -1 &&
-		        gamea.cuppy.the_cup_winners_cup[i].club[0].idx < 245 && gamea.cuppy.the_cup_winners_cup[i].club[1].idx < 245 );
-
-		printf("%3.3s:%16.16s - %3.3s:%16.16s\nat %24.24s\n",
-			"XXX", gameb.club[ gamea.cuppy.the_cup_winners_cup[i].club[0].idx ].name,
-			"XXX", gameb.club[ gamea.cuppy.the_cup_winners_cup[i].club[1].idx ].name,
-			gameb.club[ gamea.cuppy.the_cup_winners_cup[i].club[0].idx ].stadium);
-	}
-	printf("\n");
-
-	printf("the u.e.f.a. cup\n");
-	printf("XXX round leg X\n");
-	for (int i = 0; i < 32; ++i) {
-		assert( gamea.cuppy.the_uefa_cup[i].club[0].idx != -1 && gamea.cuppy.the_uefa_cup[i].club[1].idx != -1 &&
-		        gamea.cuppy.the_uefa_cup[i].club[0].idx < 245 && gamea.cuppy.the_uefa_cup[i].club[1].idx < 245 );
-
-		printf("%3.3s:%16.16s - %3.3s:%16.16s\nat %24.24s\n",
-			"XXX", gameb.club[ gamea.cuppy.the_uefa_cup[i].club[0].idx ].name,
-			"XXX", gameb.club[ gamea.cuppy.the_uefa_cup[i].club[1].idx ].name,
-			gameb.club[ gamea.cuppy.the_uefa_cup[i].club[0].idx ].stadium);
-	}
-	printf("\n");
-
-	assert( gamea.cuppy.the_charity_shield.club[0].idx != -1 && gamea.cuppy.the_charity_shield.club[1].idx != -1 &&
-	        gamea.cuppy.the_charity_shield.club[0].idx < 245 && gamea.cuppy.the_charity_shield.club[1].idx < 245 );
-
-	printf("%3.3s:%16.16s - %3.3s:%16.16s\nat %24.24s\n",
-		"XXX", gameb.club[ gamea.cuppy.the_charity_shield.club[0].idx ].name,
-		"XXX", gameb.club[ gamea.cuppy.the_charity_shield.club[1].idx ].name,
-		gameb.club[ gamea.cuppy.the_charity_shield.club[0].idx ].stadium);
-	printf("\n");
-
 
 /*
 	printf(" idx, club, goals, home_supporters, total_supporters, away_supporters, goals, idx club, \n");
