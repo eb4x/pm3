@@ -2686,8 +2686,8 @@ void change_club(int new_club_idx, int player) {
 			exit(EXIT_FAILURE);
 	}
 
-	struct gameb::club &old_club = gameb.club[old_club_idx];
-	strncpy(old_club.manager, DEFAULT_MANAGER_NAME, 16);
+	strncpy(gameb.club[new_club_idx].manager, gameb.club[old_club_idx].manager, 16);
+	strncpy(gameb.club[old_club_idx].manager, DEFAULT_MANAGER_NAME, 16);
 }
 // vim: ts=3 nowrap
 
