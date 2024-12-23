@@ -8,6 +8,7 @@
 
 #define HOME 0
 #define AWAY 1
+#define DEFAULT_MANAGER_NAME "J.Smith        "
 
 struct gamea {
 
@@ -578,7 +579,7 @@ void dump_player(struct gamec::player &player);
 void print_player_name(int16_t idx, bool newline = true);
 
 void print_help(char *command) {
-	fprintf(stderr, "Usage: %s -g 1-8 [ /path/to/saves/ ]\n", command);
+	fprintf(stderr, "Usage: %s -g 1-8 [-t 0-75] [-s] [-h] [ /path/to/saves/ ]\n", command);
 	fprintf(stderr, "\n");
 	fprintf(stderr, "  -[abc]\n");
 	fprintf(stderr, "    dump game[abc]\n");
@@ -586,11 +587,21 @@ void print_help(char *command) {
 	fprintf(stderr, "  -g 1-8, --game=1-8\n");
 	fprintf(stderr, "    Which savegame to work on\n");
 	fprintf(stderr, "\n");
+	fprintf(stderr, "  -t 0-75\n");
+	fprintf(stderr, "    Change starting team to team ID\n");
+	fprintf(stderr, "\n");
+	fprintf(stderr, "  -s\n");
+	fprintf(stderr, "    Maximize all values for team\n");
+	fprintf(stderr, "\n");
+	fprintf(stderr, "  -h\n");
+	fprintf(stderr, "    Displays this help message\n");
+	fprintf(stderr, "\n");
 	fprintf(stderr, "  [ /path/to/saves/ ]\n");
 	fprintf(stderr, "    optionally provide a path to saves\n");
 }
 
 void soup_up(int player = 0);
+void change_club(int new_club_idx, int new_player = 0);
 
 int main(int argc, char *argv[])
 {
@@ -602,21 +613,24 @@ int main(int argc, char *argv[])
 
 	char *path = NULL;
 	int game_nr = -1, opt_soup_up = 0;
+	int opt_new_club_idx = -1;
 
 	static struct option long_options[] = {
 		{ "game",    required_argument, 0, 'g' },
 		{ "help",    no_argument,       0, 'h' },
+		{ "team",    no_argument,       0, 't' },
 		{ "soup-up", no_argument,       0, 's' },
 		{ "version", no_argument,       0, 'v' },
 		{ 0, 0, 0, 0 }
 	};
 
-	while ((c = getopt_long(argc, argv, "abcg:hs", long_options, &optindex)) != -1) {
+	while ((c = getopt_long(argc, argv, "abcg:t:hs", long_options, &optindex)) != -1) {
 		switch (c) {
 			case 'a': opt_dump_gamea = 1;     break;
 			case 'b': opt_dump_gameb = 1;     break;
 			case 'c': opt_dump_gamec = 1;     break;
 			case 'g': game_nr = atoi(optarg); break;
+			case 't': opt_new_club_idx = atoi(optarg); break;
 			case 'h': help = 1;               break;
 			case 's': opt_soup_up = 1;        break;
 			default: break;
@@ -702,6 +716,23 @@ int main(int argc, char *argv[])
 		fwrite(&gamec, sizeof (struct gamec), 1, fgc);
 		fclose(fgc);
 	}
+
+	if ( opt_new_club_idx != -1 ) {
+		change_club(opt_new_club_idx);
+
+		fga = fopen(gamexa, "w+");
+		fwrite(&gamea, sizeof (struct gamea), 1, fga);
+		fclose(fga);
+
+		fgb = fopen(gamexb, "w+");
+		fwrite(&gameb, sizeof (struct gameb), 1, fgb);
+		fclose(fgb);
+
+		fgc = fopen(gamexc, "w+");
+		fwrite(&gamec, sizeof (struct gamec), 1, fgc);
+		fclose(fgc);
+	}
+
 
 	free(gamexa);
 	free(gamexb);
@@ -1569,9 +1600,9 @@ void dump_gamea_manager(int player) {
 		printf("Numb01: %5d\nNumb02: %5d\nNumb03: %5d\nNumb04: %5d\n",
 			manager.numb01, manager.numb02,
 			manager.numb03, manager.numb04);
-		printf("Managerial rating.....:%3d\% (%+2d\%)\n"
-		       "Directors confidence..:%3d\% (%+2d\%)\n"
-		       "Supporters confidence.:%3d\% (%+2d\%)\n",
+		printf("Managerial rating.....:%3d%% (%+2d%%)\n"
+		       "Directors confidence..:%3d%% (%+2d%%)\n"
+		       "Supporters confidence.:%3d%% (%+2d%%)\n",
 			manager.managerial_rating_current,
 			manager.managerial_rating_current - manager.managerial_rating_start,
 			manager.directors_confidence_current,
@@ -2503,4 +2534,160 @@ void soup_up(int player) {
 		player.morl = 8;
 	}
 }
+
+void change_club(int new_club_idx, int new_player) {
+	struct gamea::manager &manager = gamea.manager[new_player];
+	int old_club_idx = manager.club_idx;
+	manager.club_idx = new_club_idx;
+
+	switch (manager.club_idx) {
+		case 0 ... 21:
+			manager.unk_number = 0;
+			manager.stadium.ground_facilities.level = 3;
+			manager.stadium.supporters_club.level = 3;
+			manager.stadium.flood_lights.level = 2;
+			manager.stadium.scoreboard.level = 3;
+			manager.stadium.undersoil_heating.level = 1;
+			manager.stadium.changing_rooms.level = 2;
+			manager.stadium.gymnasium.level = 3;
+			manager.stadium.car_park.level = 2;
+
+		    for (int i = 0; i < sizeof (manager.stadium.safety_rating); ++i) {
+			    manager.stadium.safety_rating[i] = 4;
+			}
+
+    		for (int i = 0; i < 4; ++i) {
+    			manager.stadium.capacity[i].seating = 10000;
+    			manager.stadium.capacity[i].terraces = 0;
+    			manager.stadium.conversion[i].level= 2;
+    			manager.stadium.area_covering[i].level= 3;
+    		}
+
+		    manager.price.league_match_seating = 15;
+		    manager.price.league_match_terrace = 13;
+		    manager.price.cup_match_seating = 18;
+		    manager.price.cup_match_terrace = 15;
+
+			break;
+		case 22 ... 45:
+			manager.unk_number = 1;
+			manager.stadium.ground_facilities.level = 2;
+			manager.stadium.supporters_club.level = 2;
+			manager.stadium.flood_lights.level = 2;
+			manager.stadium.scoreboard.level = 2;
+			manager.stadium.undersoil_heating.level = 1;
+			manager.stadium.changing_rooms.level = 2;
+			manager.stadium.gymnasium.level = 2;
+			manager.stadium.car_park.level = 2;
+
+		    for (int i = 0; i < sizeof (manager.stadium.safety_rating); ++i) {
+			    manager.stadium.safety_rating[i] = 3;
+			}
+
+    		for (int i = 0; i < 4; ++i) {
+    			manager.stadium.capacity[i].seating = 5000;
+    			manager.stadium.capacity[i].terraces = 0;
+    			manager.stadium.conversion[i].level = 2;
+    			manager.stadium.area_covering[i].level = 2;
+    		}
+
+		    manager.price.league_match_seating = 13;
+		    manager.price.league_match_terrace = 11;
+		    manager.price.cup_match_seating = 16;
+		    manager.price.cup_match_terrace = 13;
+
+			break;
+		case 46 ... 69:
+			manager.unk_number = 2;
+			manager.stadium.ground_facilities.level = 2;
+			manager.stadium.supporters_club.level = 2;
+			manager.stadium.flood_lights.level = 1;
+			manager.stadium.scoreboard.level = 2;
+			manager.stadium.undersoil_heating.level = 0;
+			manager.stadium.changing_rooms.level = 1;
+			manager.stadium.gymnasium.level = 2;
+			manager.stadium.car_park.level = 1;
+
+		    for (int i = 0; i < sizeof (manager.stadium.safety_rating); ++i) {
+			    manager.stadium.safety_rating[i] = 2;
+			}
+
+    		for (int i = 0; i < 4; ++i) {
+    			manager.stadium.capacity[i].seating = 2500;
+    			manager.stadium.capacity[i].terraces = 0;
+    			manager.stadium.conversion[i].level = 1;
+    			manager.stadium.area_covering[i].level = 1;
+    		}
+
+		    manager.price.league_match_seating = 11;
+		    manager.price.league_match_terrace = 9;
+		    manager.price.cup_match_seating = 14;
+		    manager.price.cup_match_terrace = 11;
+
+			break;
+		case 70 ... 91:
+			manager.unk_number = 3;
+			manager.stadium.ground_facilities.level = 1;
+			manager.stadium.supporters_club.level = 1;
+			manager.stadium.flood_lights.level = 1;
+			manager.stadium.scoreboard.level = 1;
+			manager.stadium.undersoil_heating.level = 0;
+			manager.stadium.changing_rooms.level = 1;
+			manager.stadium.gymnasium.level = 1;
+			manager.stadium.car_park.level = 1;
+
+		    for (int i = 0; i < sizeof (manager.stadium.safety_rating); ++i) {
+			    manager.stadium.safety_rating[i] = 1;
+			}
+
+    		for (int i = 0; i < 4; ++i) {
+    			manager.stadium.capacity[i].seating = 1000;
+    			manager.stadium.capacity[i].terraces = 1;
+    			manager.stadium.conversion[i].level = 0;
+    			manager.stadium.area_covering[i].level = 0;
+    		}
+
+		    manager.price.league_match_seating = 9;
+		    manager.price.league_match_terrace = 7;
+		    manager.price.cup_match_seating = 12;
+		    manager.price.cup_match_terrace = 9;
+
+			break;
+		case 92 ... 113:
+			manager.unk_number = 4;
+			manager.stadium.ground_facilities.level = 1;
+			manager.stadium.supporters_club.level = 1;
+			manager.stadium.flood_lights.level = 0;
+			manager.stadium.scoreboard.level = 1;
+			manager.stadium.undersoil_heating.level = 0;
+			manager.stadium.changing_rooms.level = 0;
+			manager.stadium.gymnasium.level = 1;
+			manager.stadium.car_park.level = 0;
+
+		    for (int i = 0; i < sizeof (manager.stadium.safety_rating); ++i) {
+			    manager.stadium.safety_rating[i] = 0;
+			}
+
+    		for (int i = 0; i < 4; ++i) {
+    			manager.stadium.capacity[i].seating = 500;
+    			manager.stadium.capacity[i].terraces = 1;
+    			manager.stadium.conversion[i].level = 0;
+    			manager.stadium.area_covering[i].level = 0;
+    		}
+
+		    manager.price.league_match_seating = 7;
+		    manager.price.league_match_terrace = 5;
+		    manager.price.cup_match_seating = 10;
+		    manager.price.cup_match_terrace = 7;
+
+			break;
+		default:
+			fprintf(stderr, "Invalid Club index (%i)\n", new_club_idx);
+			exit(EXIT_FAILURE);
+	}
+
+	struct gameb::club &old_club = gameb.club[old_club_idx];
+	strncpy(old_club.manager, DEFAULT_MANAGER_NAME, 16);
+}
 // vim: ts=3 nowrap
+
