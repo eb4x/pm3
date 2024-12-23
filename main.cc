@@ -8,7 +8,7 @@
 
 #define HOME 0
 #define AWAY 1
-#define DEFAULT_MANAGER_NAME "J.Smith        "
+#define DEFAULT_MANAGER_NAME "J.Smith	    "
 
 struct gamea {
 
@@ -34,8 +34,8 @@ struct gamea {
 		} __attribute__ ((packed));
 
 		struct { int16_t club_idx; int16_t hx; int16_t hw; int16_t hd; int16_t hl; int16_t hf; int16_t ha;
-		                           int16_t ax; int16_t aw; int16_t ad; int16_t al; int16_t af; int16_t aa;
-		                           int16_t xx;
+			         	          int16_t ax; int16_t aw; int16_t ad; int16_t al; int16_t af; int16_t aa;
+			         	          int16_t xx;
 		} __attribute__ ((packed)) all[114];
 	} __attribute__ ((packed)) table;
 
@@ -579,60 +579,60 @@ void dump_player(struct gamec::player &player);
 void print_player_name(int16_t idx, bool newline = true);
 
 void print_help(char *command) {
-	fprintf(stderr, "Usage: %s -g 1-8 [-t 0-75] [-s] [-h] [ /path/to/saves/ ]\n", command);
+	fprintf(stderr, "Usage: %s -g 1-8 [-t 0-113] [-s] [-h] [ /path/to/saves/ ]\n", command);
 	fprintf(stderr, "\n");
 	fprintf(stderr, "  -[abc]\n");
-	fprintf(stderr, "    dump game[abc]\n");
+	fprintf(stderr, "	dump game[abc]\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "  -g 1-8, --game=1-8\n");
-	fprintf(stderr, "    Which savegame to work on\n");
+	fprintf(stderr, "	Which savegame to work on\n");
 	fprintf(stderr, "\n");
-	fprintf(stderr, "  -t 0-75\n");
-	fprintf(stderr, "    Change starting team to team ID\n");
+	fprintf(stderr, "  -t 0-113\n");
+	fprintf(stderr, "	Change starting team to team ID\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "  -s\n");
-	fprintf(stderr, "    Maximize all values for team\n");
+	fprintf(stderr, "	Maximize all values for team\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "  -h\n");
-	fprintf(stderr, "    Displays this help message\n");
+	fprintf(stderr, "	Displays this help message\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "  [ /path/to/saves/ ]\n");
-	fprintf(stderr, "    optionally provide a path to saves\n");
+	fprintf(stderr, "	optionally provide a path to saves\n");
 }
 
 void soup_up(int player = 0);
-void change_club(int new_club_idx, int new_player = 0);
+void change_club(int new_club_idx, int player = 0);
 
 int main(int argc, char *argv[])
 {
 	int c, optindex = 0;
 	int help = 0;
 	int opt_dump_gamea = 0,
-	    opt_dump_gameb = 0,
-	    opt_dump_gamec = 0;
+		opt_dump_gameb = 0,
+		opt_dump_gamec = 0;
 
 	char *path = NULL;
 	int game_nr = -1, opt_soup_up = 0;
 	int opt_new_club_idx = -1;
 
 	static struct option long_options[] = {
-		{ "game",    required_argument, 0, 'g' },
-		{ "help",    no_argument,       0, 'h' },
-		{ "team",    no_argument,       0, 't' },
-		{ "soup-up", no_argument,       0, 's' },
-		{ "version", no_argument,       0, 'v' },
+		{ "game",	required_argument, 0, 'g' },
+		{ "help",	no_argument,	   0, 'h' },
+		{ "team",	no_argument,	   0, 't' },
+		{ "soup-up", no_argument,	   0, 's' },
+		{ "version", no_argument,	   0, 'v' },
 		{ 0, 0, 0, 0 }
 	};
 
 	while ((c = getopt_long(argc, argv, "abcg:t:hs", long_options, &optindex)) != -1) {
 		switch (c) {
-			case 'a': opt_dump_gamea = 1;     break;
-			case 'b': opt_dump_gameb = 1;     break;
-			case 'c': opt_dump_gamec = 1;     break;
+			case 'a': opt_dump_gamea = 1;	 break;
+			case 'b': opt_dump_gameb = 1;	 break;
+			case 'c': opt_dump_gamec = 1;	 break;
 			case 'g': game_nr = atoi(optarg); break;
 			case 't': opt_new_club_idx = atoi(optarg); break;
-			case 'h': help = 1;               break;
-			case 's': opt_soup_up = 1;        break;
+			case 'h': help = 1;	           break;
+			case 's': opt_soup_up = 1;	    break;
 			default: break;
 		}
 	}
@@ -643,21 +643,21 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "path:%s: argv:%s\n", path, argv[optind]);
 	}
 
-	if (help || argc == 1 || game_nr < 1 || game_nr > 8) {
+	if (help || argc == 1 || game_nr < 1 || game_nr > 8 || opt_new_club_idx < -1 || opt_new_club_idx > 113) {
 		print_help(argv[0]);
 		return EXIT_SUCCESS;
 	}
 
-	fprintf(stderr, "sizeof (gamea)        = 0x%0zx\n", sizeof (struct gamea));
+	fprintf(stderr, "sizeof (gamea)	    = 0x%0zx\n", sizeof (struct gamea));
 	fprintf(stderr, "sizeof (gameb.club)   = 0x%0zx\n", sizeof (struct gameb::club));
 	fprintf(stderr, "sizeof (gamec.player) = 0x%0zx\n", sizeof (struct gamec::player));
 
-	assert(sizeof (struct gamea)         == 0x7372);
+	assert(sizeof (struct gamea)	     == 0x7372);
 	assert(sizeof (struct gameb::club)   == 0x023A);
 	assert(sizeof (struct gamec::player) == 0x0028);
 
 	char *gamexa = NULL, *gamexb = NULL, *gamexc = NULL;
-	FILE *fga = NULL,    *fgb = NULL,    *fgc = NULL;
+	FILE *fga = NULL,	*fgb = NULL,	*fgc = NULL;
 
 	size_t gamexa_len = asprintf(&gamexa, "%sGAME%.1dA", path != NULL ? path : "", game_nr);
 	fga = fopen(gamexa, "r");
@@ -757,15 +757,15 @@ void check_consistency()
 
 				all[ gameb.club[c].player_index[p] ] = c;
 				printf("Added %d %12.12s to %16.16s\n",
-					                 gameb.club[c].player_index[p],
-					gamec.player[    gameb.club[c].player_index[p] ].name,
+						             gameb.club[c].player_index[p],
+					gamec.player[	gameb.club[c].player_index[p] ].name,
 					gameb.club[c].name);
 
 			} else {
 				printf("Duplicate. %4d %12.12s plays for\n"
 					"%16.16s AND %16.16s\n",
-					                 gameb.club[c].player_index[p],
-					gamec.player[    gameb.club[c].player_index[p] ].name,
+						             gameb.club[c].player_index[p],
+					gamec.player[	gameb.club[c].player_index[p] ].name,
 					gameb.club[ all[ gameb.club[c].player_index[p] ] ].name,
 					gameb.club[c].name);
 			}
@@ -786,17 +786,17 @@ void dump_gamea() {
 	int correction = 0;
 	for (int i = 0; i < 118; ++i) {
 		switch (i) {
-			case   0: correction =   0; printf("Premier league clubs\n");      break;
-			case  22: correction =  22; printf("\nDivision 1 clubs\n");        break;
-			case  46: correction =  46; printf("\nDivision 2 clubs\n");        break;
-			case  70: correction =  70; printf("\nDivision 3 clubs\n");        break;
+			case   0: correction =   0; printf("Premier league clubs\n");	  break;
+			case  22: correction =  22; printf("\nDivision 1 clubs\n");	    break;
+			case  46: correction =  46; printf("\nDivision 2 clubs\n");	    break;
+			case  70: correction =  70; printf("\nDivision 3 clubs\n");	    break;
 			case  92: correction =  92; printf("\nConference league clubs\n"); break;
-			case 114: correction = 114; printf("\nMisc clubs\n");              break;
+			case 114: correction = 114; printf("\nMisc clubs\n");	          break;
 			default: break;
 		}
 
 		printf("%2d (%04x) %16.16s\n", i + 1 - correction,
-			           gamea.club_index.all[i],
+				       gamea.club_index.all[i],
 			gameb.club[gamea.club_index.all[i]].name);
 	}
 	printf("\n");
@@ -811,27 +811,27 @@ void dump_gamea() {
 			case   0:
 				correction =   0;
 				printf("Premier league home/away table\n");
-				printf("Club              W  D  L  F  A   W  D  L  F  A\n");
+				printf("Club	          W  D  L  F  A   W  D  L  F  A\n");
 				break;
 			case  22:
 				correction =  22;
 				printf("\nDivision 1 home/away table\n");
-				printf("Club              W  D  L  F  A   W  D  L  F  A\n");
+				printf("Club	          W  D  L  F  A   W  D  L  F  A\n");
 				break;
 			case  46:
 				correction =  46;
 				printf("\nDivision 2 home/away table\n");
-				printf("Club              W  D  L  F  A   W  D  L  F  A\n");
+				printf("Club	          W  D  L  F  A   W  D  L  F  A\n");
 				break;
 			case  70:
 				correction =  70;
 				printf("\nDivision 3 home/away table\n");
-				printf("Club              W  D  L  F  A   W  D  L  F  A\n");
+				printf("Club	          W  D  L  F  A   W  D  L  F  A\n");
 				break;
 			case  92:
 				correction =  92;
 				printf("\nConference league home/away table\n");
-				printf("Club              W  D  L  F  A   W  D  L  F  A\n");
+				printf("Club	          W  D  L  F  A   W  D  L  F  A\n");
 				break;
 			default:
 				break;
@@ -863,15 +863,15 @@ void dump_gamea() {
 	for (int i = 0; i < 75; ++i) {
 		switch (i) {
 			case   0: correction =   0; printf("Premier league top scorers\n");
-				printf("Player       Rating       Club             PL SC\n"); break;
+				printf("Player	   Rating       Club	         PL SC\n"); break;
 			case  15: correction =  15; printf("\nDivision 1 top scorers\n");
-				printf("Player       Rating       Club             PL SC\n"); break;
+				printf("Player	   Rating       Club	         PL SC\n"); break;
 			case  30: correction =  30; printf("\nDivision 2 top scorers\n");
-				printf("Player       Rating       Club             PL SC\n"); break;
+				printf("Player	   Rating       Club	         PL SC\n"); break;
 			case  45: correction =  45; printf("\nDivision 3 top scorers\n");
-				printf("Player       Rating       Club             PL SC\n"); break;
+				printf("Player	   Rating       Club	         PL SC\n"); break;
 			case  60: correction =  60; printf("\nConference league top scorers\n");
-				printf("Player       Rating       Club             PL SC\n"); break;
+				printf("Player	   Rating       Club	         PL SC\n"); break;
 			default: break;
 		}
 
@@ -905,20 +905,20 @@ void dump_gamea() {
 
 	for (int i = 0; i < 149; ++i) {
 		switch (i) {
-			case   0: printf("the f.a. cup\n");        break;
-			case  36: printf("the league cup\n");      break;
-			case  64: printf("data090\n");             break;
+			case   0: printf("the f.a. cup\n");	    break;
+			case  36: printf("the league cup\n");	  break;
+			case  64: printf("data090\n");	         break;
 			case  68: printf("the champions cup\n");   break;
-			case  84: printf("data091\n");             break;
+			case  84: printf("data091\n");	         break;
 			case 100: printf("the cup winners cup\n"); break;
-			case 116: printf("the u.e.f.a. cup\n");    break;
+			case 116: printf("the u.e.f.a. cup\n");	break;
 			case 148: printf("the charity sheld\n");   break;
 		}
 
 		struct gamea::cuppy::cup_entry &cup_entry = gamea.cuppy.all[i];
 
 		if (cup_entry.club[0].idx ==  -1 || cup_entry.club[1].idx ==  -1 ||
-		    cup_entry.club[0].idx >= 245 || cup_entry.club[1].idx >= 245 ) {
+			cup_entry.club[0].idx >= 245 || cup_entry.club[1].idx >= 245 ) {
 			printf("XXX: idx: %d, goals: %d, audience: %d - idx: %d, goals: %d, audience: %d\n",
 				cup_entry.club[0].idx, cup_entry.club[0].goals, cup_entry.club[0].audience,
 				cup_entry.club[1].idx, cup_entry.club[1].goals, cup_entry.club[1].audience);
@@ -938,7 +938,7 @@ void dump_gamea() {
 	printf(" idx, club, goals, home_supporters, total_supporters, away_supporters, goals, idx club, \n");
 	for (int i = 0; i < 149; ++i) {
 		if ( gamea.cuppy.all[i].club[0].idx == -1 || gamea.cuppy.all[i].club[1].idx == -1 ||
-		     gamea.cuppy.all[i].club[0].idx > 244 || gamea.cuppy.all[i].club[1].idx > 244 ){
+			 gamea.cuppy.all[i].club[0].idx > 244 || gamea.cuppy.all[i].club[1].idx > 244 ){
 			printf("cuppy.all[%3d]: %04x %d %5d (%5d) %5d %d %04x\n", i,
 				gamea.cuppy.all[i].club[0].idx, gamea.cuppy.all[i].club[0].goals, gamea.cuppy.all[i].club[0].audience,
 				0,
@@ -949,9 +949,9 @@ void dump_gamea() {
 
 		printf("cuppy.all[%3d]: (%04x) %16.16s %3d %5d (%5d) %5d %3d (%04x) %16.16s\n", i,
 			gamea.cuppy.all[i].club[0].idx, gameb.club[ gamea.cuppy.all[i].club[0].idx ].name,
-			gamea.cuppy.all[i].club[0].goals,           gamea.cuppy.all[i].club[0].audience,
-			gamea.cuppy.all[i].club[0].audience +       gamea.cuppy.all[i].club[1].audience,
-			gamea.cuppy.all[i].club[1].audience,        gamea.cuppy.all[i].club[1].goals,
+			gamea.cuppy.all[i].club[0].goals,	       gamea.cuppy.all[i].club[0].audience,
+			gamea.cuppy.all[i].club[0].audience +	   gamea.cuppy.all[i].club[1].audience,
+			gamea.cuppy.all[i].club[1].audience,	    gamea.cuppy.all[i].club[1].goals,
 			gamea.cuppy.all[i].club[1].idx, gameb.club[ gamea.cuppy.all[i].club[1].idx ].name
 		);
 
@@ -969,7 +969,7 @@ void dump_gamea() {
 			gamea.the_charity_shield_history.club[0].idx, gameb.club[ gamea.the_charity_shield_history.club[0].idx ].name,
 			gamea.the_charity_shield_history.club[1].idx, gameb.club[ gamea.the_charity_shield_history.club[1].idx ].name
 	);
-	printf("                             %5d %5d : %5d %5d\n",
+	printf("	      	       	    %5d %5d : %5d %5d\n",
 		gamea.the_charity_shield_history.club[0].goals, gamea.the_charity_shield_history.club[0].audience,
 		gamea.the_charity_shield_history.club[1].goals, gamea.the_charity_shield_history.club[1].audience
 	);
@@ -977,7 +977,7 @@ void dump_gamea() {
 	printf("\n--- some table ---\n");
 	for (int i = 0; i < 11; ++i) {
 		printf("(%04x) %16.16s %d %5d" " (%5d) "
-		       "%5d %d (%04x) %16.16s\n",
+			   "%5d %d (%04x) %16.16s\n",
 			gamea.some_table[i].club1_idx,
 			gameb.club[gamea.some_table[i].club1_idx].name,
 			gamea.some_table[i].club1_goals,
@@ -998,9 +998,9 @@ void dump_gamea() {
 		}
 		printf("(%04x) %16.16s %d %5d (%5d) %5d %d (%04x) %16.16s\n",
 			gamea.last_results.all[i].club[0].idx, gameb.club[ gamea.last_results.all[i].club[0].idx ].name,
-			gamea.last_results.all[i].club[0].goals,           gamea.last_results.all[i].club[0].audience,
-			gamea.last_results.all[i].club[0].audience +       gamea.last_results.all[i].club[1].audience,
-			gamea.last_results.all[i].club[1].audience,        gamea.last_results.all[i].club[1].goals,
+			gamea.last_results.all[i].club[0].goals,	       gamea.last_results.all[i].club[0].audience,
+			gamea.last_results.all[i].club[0].audience +	   gamea.last_results.all[i].club[1].audience,
+			gamea.last_results.all[i].club[1].audience,	    gamea.last_results.all[i].club[1].goals,
 			gamea.last_results.all[i].club[1].idx, gameb.club[ gamea.last_results.all[i].club[1].idx ].name
 		);
 	}
@@ -1224,9 +1224,9 @@ void dump_gamea_manager(int player) {
 	printf("Unk number: %d\n", manager.unk_number);
 	printf("Contract: %d\n", manager.contract_length);
 	printf("League match: Seating..£%-2d\n"
-	       "League match: Terraces.£%-2d\n"
-	       "Cup match: Seating.....£%-2d\n"
-	       "Cup match: Terraces....£%-2d\n",
+		   "League match: Terraces.£%-2d\n"
+		   "Cup match: Seating.....£%-2d\n"
+		   "Cup match: Terraces....£%-2d\n",
 		manager.price.league_match_seating,
 		manager.price.league_match_terrace,
 		manager.price.cup_match_seating,
@@ -1251,18 +1251,18 @@ void dump_gamea_manager(int player) {
 
 		enum { DEBIT = 0, CREDIT = 1 };
 		struct gamea::manager::bank_statement &bs = manager.bank_statement[i];
-		printf("gate receipts       = %8d %8d\n", bs.gate_receipts[0],       bs.gate_receipts[1]);
-		printf("club wages          = %8d %8d\n", bs.club_wages[0],          bs.club_wages[1]);
-		printf("transfer fees       = %8d %8d\n", bs.transfer_fees[0],       bs.transfer_fees[1]);
-		printf("club fines          = %8d %8d\n", bs.club_fines[0],          bs.club_fines[1]);
-		printf("grants for club     = %8d %8d\n", bs.grants_for_club[0],     bs.grants_for_club[1]);
-		printf("club bills          = %8d %8d\n", bs.club_bills[0],          bs.club_bills[1]);
+		printf("gate receipts	   = %8d %8d\n", bs.gate_receipts[0],	   bs.gate_receipts[1]);
+		printf("club wages	      = %8d %8d\n", bs.club_wages[0],	      bs.club_wages[1]);
+		printf("transfer fees	   = %8d %8d\n", bs.transfer_fees[0],	   bs.transfer_fees[1]);
+		printf("club fines	      = %8d %8d\n", bs.club_fines[0],	      bs.club_fines[1]);
+		printf("grants for club	 = %8d %8d\n", bs.grants_for_club[0],	 bs.grants_for_club[1]);
+		printf("club bills	      = %8d %8d\n", bs.club_bills[0],	      bs.club_bills[1]);
 		printf("miscellaneous sales = %8d %8d\n", bs.miscellaneous_sales[0], bs.miscellaneous_sales[1]);
 		printf("bank loan payments  = %8d %8d\n", bs.bank_loan_payments[0],  bs.bank_loan_payments[1]);
 		printf("ground improvements = %8d %8d\n", bs.ground_improvements[0], bs.ground_improvements[1]);
 		printf("advertising boards  = %8d %8d\n", bs.advertising_boards[0],  bs.advertising_boards[1]);
-		printf("other items         = %8d %8d\n", bs.other_items[0],         bs.other_items[1]);
-		printf("account interest    = %8d %8d\n", bs.account_interest[0],    bs.account_interest[1]);
+		printf("other items	     = %8d %8d\n", bs.other_items[0],	     bs.other_items[1]);
+		printf("account interest	= %8d %8d\n", bs.account_interest[0],	bs.account_interest[1]);
 		printf("\n");
 	}
 
@@ -1290,34 +1290,34 @@ void dump_gamea_manager(int player) {
 	};
 
 	static const char *rating[] = {
-		"Fair *",       //  0 -  4
-		"Fair **",      //  5 -  9
-		"Fair ***",     // 10 - 14
-		"Fair ****",    // 15 - 19
+		"Fair *",	   //  0 -  4
+		"Fair **",	  //  5 -  9
+		"Fair ***",	 // 10 - 14
+		"Fair ****",	// 15 - 19
 		"Fair *****",   // 20 - 24
-		"Good *",       // 25 - 29
-		"Good **",      // 30 - 34
-		"Good ***",     // 35 - 39
-		"Good ****",    // 40 - 44
+		"Good *",	   // 25 - 29
+		"Good **",	  // 30 - 34
+		"Good ***",	 // 35 - 39
+		"Good ****",	// 40 - 44
 		"Good *****",   // 45 - 49
-		"V.Good *",     // 50 - 54
-		"V.Good **",    // 55 - 59
+		"V.Good *",	 // 50 - 54
+		"V.Good **",	// 55 - 59
 		"V.Good ***",   // 60 - 64
 		"V.Good ****",  // 65 - 69
 		"V.Good *****", // 70 - 74
-		"Superb",       // 75 - 79
+		"Superb",	   // 75 - 79
 		"Outstanding",  // 80 - 84
 		"World class",  // 85 - 89
 		"Exceptional",  // 90 - 94
 		"The ultimate", // 95 - 99
 	};
 
-	printf("Your employees Type       Rating       Wage  Ag\n");
+	printf("Your employees Type	   Rating	   Wage  Ag\n");
 	for (int i = 0; i < 20; ++i) {
 		struct gamea::manager::employee &employee = manager.employee[i];
 
 		if (i == 12)
-			printf("\nVacancies      Type       Rating       Wage  Ag\n");
+			printf("\nVacancies	  Type   	Rating       Wage  Ag\n");
 
 		printf("%14.14s %10.10s %-12.12s %5d %2d\n",
 			employee.name,
@@ -1330,14 +1330,14 @@ void dump_gamea_manager(int player) {
 	static const char *nyn[] = { "N/A", "Yes", "No" };
 	struct gamea::manager::assistant_manager &am = manager.assistant_manager;
 	printf("Do training schedules.......: %s\n"
-	       "Treat injured players.......: %s\n"
-	       "Check sponsors boards.......: %s\n"
-	       "Hire and fire employees.....: %s\n"
-	       "Negotiate player contracts..: %s\n",
-		nyn[ am.do_training_schedules      ],
-		nyn[ am.treat_injured_players      ],
-		nyn[ am.check_sponsors_boards      ],
-		nyn[ am.hire_and_fire_employees    ],
+		   "Treat injured players.......: %s\n"
+		   "Check sponsors boards.......: %s\n"
+		   "Hire and fire employees.....: %s\n"
+		   "Negotiate player contracts..: %s\n",
+		nyn[ am.do_training_schedules	  ],
+		nyn[ am.treat_injured_players	  ],
+		nyn[ am.check_sponsors_boards	  ],
+		nyn[ am.hire_and_fire_employees	],
 		nyn[ am.negotiate_player_contracts ]);
 
 	printf("\n\n%02x\n", manager.data120);
@@ -1404,9 +1404,9 @@ void dump_gamea_manager(int player) {
 		printf("\n");
 	}
 
-	printf("Number 1            :%d\n", manager.number1);
-	printf("Number 2            :%d\n", manager.number2);
-	printf("Number 3            :%d\n", manager.number3);
+	printf("Number 1	        :%d\n", manager.number1);
+	printf("Number 2	        :%d\n", manager.number2);
+	printf("Number 3	        :%d\n", manager.number3);
 	printf("Money from directors:%d\n", manager.money_from_directors);
 
 	for (int i = 0; i < sizeof (manager.data149); ++i) {
@@ -1474,13 +1474,13 @@ void dump_gamea_manager(int player) {
 
 			case 21:
 				printf("%12.12s will be taking early retirement from\n"
-				       "football in 4 weeks time\n",
+					   "football in 4 weeks time\n",
 					gamec.player[ news.ix2 ].name);
 				break;
 
 			case 22:
 				printf("%12.12s has now taken early retirement for a\n"
-				       "life of luxury in the Costa del Sol\n",
+					   "life of luxury in the Costa del Sol\n",
 					gamec.player[ news.ix2 ].name);
 				break;
 
@@ -1580,14 +1580,14 @@ void dump_gamea_manager(int player) {
 
 		printf("ground_facilities = %d, %d\n", stadium.ground_facilities.level, stadium.ground_facilities.time);
 		printf("supporters_club   = %d, %d\n", stadium.supporters_club.level,   stadium.supporters_club.time);
-		printf("flood_lights      = %d, %d\n", stadium.flood_lights.level,      stadium.flood_lights.time);
-		printf("scoreboard        = %d, %d\n", stadium.scoreboard.level,        stadium.scoreboard.time);
+		printf("flood_lights	  = %d, %d\n", stadium.flood_lights.level,	  stadium.flood_lights.time);
+		printf("scoreboard	    = %d, %d\n", stadium.scoreboard.level,	    stadium.scoreboard.time);
 		printf("undersoil_heating = %d, %d\n", stadium.undersoil_heating.level, stadium.undersoil_heating.time);
-		printf("changing_rooms    = %d, %d\n", stadium.changing_rooms.level,    stadium.changing_rooms.time);
-		printf("gymnasium         = %d, %d\n", stadium.gymnasium.level,         stadium.gymnasium.time);
-		printf("car_park          = %d, %d\n", stadium.car_park.level,          stadium.car_park.time);
+		printf("changing_rooms	= %d, %d\n", stadium.changing_rooms.level,	stadium.changing_rooms.time);
+		printf("gymnasium	     = %d, %d\n", stadium.gymnasium.level,	     stadium.gymnasium.time);
+		printf("car_park	      = %d, %d\n", stadium.car_park.level,	      stadium.car_park.time);
 
-		printf("safety rating     =");
+		printf("safety rating	 =");
 		for (int i = 0; i < sizeof (stadium.safety_rating); ++i)
 			printf(" %02x", stadium.safety_rating[i]);
 		printf("\n");
@@ -1601,8 +1601,8 @@ void dump_gamea_manager(int player) {
 			manager.numb01, manager.numb02,
 			manager.numb03, manager.numb04);
 		printf("Managerial rating.....:%3d%% (%+2d%%)\n"
-		       "Directors confidence..:%3d%% (%+2d%%)\n"
-		       "Supporters confidence.:%3d%% (%+2d%%)\n",
+			   "Directors confidence..:%3d%% (%+2d%%)\n"
+			   "Supporters confidence.:%3d%% (%+2d%%)\n",
 			manager.managerial_rating_current,
 			manager.managerial_rating_current - manager.managerial_rating_start,
 			manager.directors_confidence_current,
@@ -1819,7 +1819,7 @@ void dump_gamea_manager(int player) {
 			"Conf."
 		};
 
-		printf("Year Div   (0000)Club             PS PL  W  D  L  GD PTS\n");
+		printf("Year Div   (0000)Club	         PS PL  W  D  L  GD PTS\n");
 		for (int i = 0; i < 20; ++i) {
 			struct gamea::manager::league_history &lh = manager.league_history[i];
 
@@ -1831,8 +1831,8 @@ void dump_gamea_manager(int player) {
 				lh.ps, lh.p, lh.w, lh.d, lh.l, lh.gd, lh.pts);
 
 			printf(" %02x %02x %02x %02x"
-			       " %02x %02x %02x %02x"
-			       " %02x %02x %02x %02x\n",
+				   " %02x %02x %02x %02x"
+				   " %02x %02x %02x %02x\n",
 				lh.unk21, lh.unk22, lh.unk23, lh.unk24,
 				lh.unk25, lh.unk26, lh.unk27, lh.unk28,
 				lh.unk29, lh.unk30, lh.unk31, lh.unk32);
@@ -1852,7 +1852,7 @@ void dump_gamea_manager(int player) {
 			"Charity shield"
 		};
 
-		printf("League titles  Won Yrs  Cup titles      Won Yrs\n");
+		printf("League titles  Won Yrs  Cup titles	  Won Yrs\n");
 		for (int i = 0; i < 5; ++i) {
 			printf("%-14.14s %3d %3d  %-15.15s %3d %3d\n",
 				match_type[i],
@@ -1864,12 +1864,12 @@ void dump_gamea_manager(int player) {
 				manager.titles[5 + i].yrs
 			);
 		}
-		printf("                        %-15.15s %3d %3d\n\n",
+		printf("	         	       %-15.15s %3d %3d\n\n",
 			match_type[10],
 			manager.titles[10].won,
 			manager.titles[10].yrs);
 
-		printf("Match type       Play  Won Drew Lost   For   Agn\n");
+		printf("Match type	   Play  Won Drew Lost   For   Agn\n");
 		for (int i = 0; i < 11; ++i)
 			printf("%-15.15s  %4d %4d %4d %4d  %4d  %4d\n",
 				match_type[i],
@@ -1888,7 +1888,7 @@ void dump_gamea_manager(int player) {
 		}
 		printf("\n");
 
-		printf("       Previous clubs   From To   Mngr Drct Sprt\n");
+		printf("	   Previous clubs   From To   Mngr Drct Sprt\n");
 		for (int i = 0; i < 4; ++i) {
 			printf("(%04x) %16.16s %4d %4d %3d%% %3d%% %3d%%\n",
 				manager.previous_clubs[i].club_idx,
@@ -2000,9 +2000,9 @@ void dump_club(struct gameb::club &club) {
 		"26", "27", "28", "29", "30", "31"
 	};
 	static const char game[] = {
-		'H', // home          0
+		'H', // home	      0
 		'H', // home_friendly 1
-		'A', // away          2
+		'A', // away	      2
 		'A', // away_friendly 3
 		'4',
 		'5'
@@ -2010,7 +2010,7 @@ void dump_club(struct gameb::club &club) {
 
 
 	printf("Timetable for %16.16s\n", club.name);
-	printf("Day:Wk Match type       G Scr Opponent\n");
+	printf("Day:Wk Match type	   G Scr Opponent\n");
 	for (int w = 0; w < 41; ++w) {
 		for (int d = 0; d < 3; ++d) {
 			struct gameb::club::timetable::week::day &rnd = club.timetable.week[w].day[d];
@@ -2085,12 +2085,12 @@ void dump_player(struct gamec::player &p) {
 	printf("Fitness  : %2d\n", p.ft);
 	printf("Aggr'sion: %2d\n", p.aggr);
 	printf("Morale   : %2d\n", p.morl);
-	printf("Foot     : %5.5s\n", foot[p.foot]);
+	printf("Foot	 : %5.5s\n", foot[p.foot]);
 	printf("\n");
 	printf("Played  : %3d\n", p.played);
 	printf("Scored  : %3d\n", p.scored);
 	printf("Conceded: \n");
-	printf("DPTS    :  %d\n", p.dpts);
+	printf("DPTS	:  %d\n", p.dpts);
 	printf("Training : %7s, %6s\n", train[p.train], intense[p.intense]);
 
 	printf("%d year contract\n", p.contract);
@@ -2172,49 +2172,49 @@ void fax_match_summary()
 		"", /* 03 */
 		"", /* 04 */
 		"", /* 05 */
-		"heavy rain    ", /* 06 */
-		"high winds    ", /* 07 */
+		"heavy rain	", /* 06 */
+		"high winds	", /* 07 */
 		"cold & sunny  ", /* 08 */
 		"cold & raining", /* 09 */
 		"cold & cloudy ", /* 0a */
 		"cold & windy  ", /* 0b */
-		"heavy rain    ", /* 0c */
-		"high winds    ", /* 0d */
-		"light rain    ", /* 0e */
-		"overcast      ", /* 0f */
+		"heavy rain	", /* 0c */
+		"high winds	", /* 0d */
+		"light rain	", /* 0e */
+		"overcast	  ", /* 0f */
 		"warm & raining", /* 10 */
 		"warm & cloudy ", /* 11 */
-		"raining       ", /* 12 */
+		"raining	   ", /* 12 */
 		"windy & sunny ", /* 13 */
 		"light winds   "  /* 14 */
 	};
 
 	struct {
 		uint16_t shots_attempted   = 0;
-		uint16_t shots_missed      = 0;
+		uint16_t shots_missed	  = 0;
 		uint16_t tackles_attempted = 0;
-		uint16_t tackles_won       = 0;
+		uint16_t tackles_won	   = 0;
 		uint16_t passes_attempted  = 0;
-		uint16_t passes_bad        = 0;
-		uint16_t shots_saved       = 0;
-		uint16_t something         = 0;
+		uint16_t passes_bad	    = 0;
+		uint16_t shots_saved	   = 0;
+		uint16_t something	     = 0;
 	} club[2];
 
 	for ( int i = 0; i < 14; ++i) {
 		for (int j = 0; j < 2; ++j) {
 			club[j].shots_attempted   += gamea.manager[0].match_summary.club[j].lineup[i].shots_attempted;
-			club[j].shots_missed      += gamea.manager[0].match_summary.club[j].lineup[i].shots_missed;
+			club[j].shots_missed	  += gamea.manager[0].match_summary.club[j].lineup[i].shots_missed;
 			club[j].tackles_attempted += gamea.manager[0].match_summary.club[j].lineup[i].tackles_attempted;
-			club[j].tackles_won       += gamea.manager[0].match_summary.club[j].lineup[i].tackles_won;
+			club[j].tackles_won	   += gamea.manager[0].match_summary.club[j].lineup[i].tackles_won;
 			club[j].passes_attempted  += gamea.manager[0].match_summary.club[j].lineup[i].passes_attempted;
-			club[j].passes_bad        += gamea.manager[0].match_summary.club[j].lineup[i].passes_bad;
-			club[j].shots_saved       += gamea.manager[0].match_summary.club[j].lineup[i].shots_saved;
-			club[j].something         += gamea.manager[0].match_summary.club[j].lineup[i].something;
+			club[j].passes_bad	    += gamea.manager[0].match_summary.club[j].lineup[i].passes_bad;
+			club[j].shots_saved	   += gamea.manager[0].match_summary.club[j].lineup[i].shots_saved;
+			club[j].something	     += gamea.manager[0].match_summary.club[j].lineup[i].something;
 		}
 	}
 
 	printf("%s\n", match_type[ gamea.manager[0].match_summary.match_type ]);
-	printf("%16.16s %d(%d)    %16.16s %d(%d)\n",
+	printf("%16.16s %d(%d)	%16.16s %d(%d)\n",
 		gameb.club[ gamea.manager[0].match_summary.club[0].club_idx ].name,
 		gamea.manager[0].match_summary.club[0].total_goals,
 		gamea.manager[0].match_summary.club[0].first_half_goals,
@@ -2227,7 +2227,7 @@ void fax_match_summary()
 		weather[ gamea.manager[0].match_summary.weather ],
 		gamea.referee[ gamea.manager[0].match_summary.referee_idx ].name);
 	printf("\n");
-	printf("totals               home away\n");
+	printf("totals	    	   home away\n");
 	printf("possesion time..... 50:40 39:20\n");
 //	printf("yellow cards....... %5d %-5d\n", gamea.manager[0].match_summary.club[0].yellow_cards , gamea.manager[0].match[1].yellow_cards);
 //	printf("red cards.......... %5d %-5d\n", gamea.manager[0].match[0]. , gamea.manager[0].match[1].);
@@ -2238,18 +2238,18 @@ void fax_match_summary()
 	printf("free kicks......... %5d %-5d\n", gamea.manager[0].match_summary.club[0].free_kicks, gamea.manager[0].match_summary.club[1].free_kicks);
 	printf("penalties.......... %5d %-5d\n", gamea.manager[0].match_summary.club[0].penalties , gamea.manager[0].match_summary.club[1].penalties );
 	printf("\n");
-	printf("shots attempted.... %5d %-5d\n", club[0].shots_attempted     , club[1].shots_attempted    );
-	printf("shots saved........ %5d %-5d\n", club[1].shots_saved         , club[0].shots_saved        );
-	printf("shots missed....... %5d %-5d\n", club[0].shots_missed        , club[1].shots_missed       );
+	printf("shots attempted.... %5d %-5d\n", club[0].shots_attempted	 , club[1].shots_attempted	);
+	printf("shots saved........ %5d %-5d\n", club[1].shots_saved	     , club[0].shots_saved	    );
+	printf("shots missed....... %5d %-5d\n", club[0].shots_missed	    , club[1].shots_missed	   );
 	printf("\n");
 	printf("attempted tackles.. %5d %-5d\n", club[0].tackles_attempted   , club[1].tackles_attempted  );
-	printf("tackles won........ %5d %-5d\n", club[0].tackles_won         , club[1].tackles_won        );
+	printf("tackles won........ %5d %-5d\n", club[0].tackles_won	     , club[1].tackles_won	    );
 	printf("tackles lost....... %5d %-5d\n", club[0].tackles_attempted - club[0].tackles_won, club[1].tackles_attempted - club[1].tackles_won);
 	printf("\n");
-	printf("attempted passes... %5d %-5d\n", club[0].passes_attempted    , club[1].passes_attempted   );
+	printf("attempted passes... %5d %-5d\n", club[0].passes_attempted	, club[1].passes_attempted   );
 //	printf("good passes........ %5d %-5d\n", gamea.manager[0].match[0]. , gamea.manager[0].match[1].);
 //	printf("passes intercepted. %5d %-5d\n", gamea.manager[0].match[0]. , gamea.manager[0].match[1].);
-	printf("bad passes......... %5d %-5d\n", club[0].passes_bad          , club[1].passes_bad         );
+	printf("bad passes......... %5d %-5d\n", club[0].passes_bad	      , club[1].passes_bad	     );
 	printf("\n");
 	printf("something.......... %5d %-5d\n", club[0].something, club[1].something);
 
@@ -2535,8 +2535,8 @@ void soup_up(int player) {
 	}
 }
 
-void change_club(int new_club_idx, int new_player) {
-	struct gamea::manager &manager = gamea.manager[new_player];
+void change_club(int new_club_idx, int player) {
+	struct gamea::manager &manager = gamea.manager[player];
 	int old_club_idx = manager.club_idx;
 	manager.club_idx = new_club_idx;
 
@@ -2552,21 +2552,21 @@ void change_club(int new_club_idx, int new_player) {
 			manager.stadium.gymnasium.level = 3;
 			manager.stadium.car_park.level = 2;
 
-		    for (int i = 0; i < sizeof (manager.stadium.safety_rating); ++i) {
-			    manager.stadium.safety_rating[i] = 4;
+			for (int i = 0; i < sizeof (manager.stadium.safety_rating); ++i) {
+				manager.stadium.safety_rating[i] = 4;
 			}
 
-    		for (int i = 0; i < 4; ++i) {
-    			manager.stadium.capacity[i].seating = 10000;
-    			manager.stadium.capacity[i].terraces = 0;
-    			manager.stadium.conversion[i].level= 2;
-    			manager.stadium.area_covering[i].level= 3;
-    		}
+			for (int i = 0; i < 4; ++i) {
+				manager.stadium.capacity[i].seating = 10000;
+				manager.stadium.capacity[i].terraces = 0;
+				manager.stadium.conversion[i].level= 2;
+				manager.stadium.area_covering[i].level= 3;
+			}
 
-		    manager.price.league_match_seating = 15;
-		    manager.price.league_match_terrace = 13;
-		    manager.price.cup_match_seating = 18;
-		    manager.price.cup_match_terrace = 15;
+			manager.price.league_match_seating = 15;
+			manager.price.league_match_terrace = 13;
+			manager.price.cup_match_seating = 18;
+			manager.price.cup_match_terrace = 15;
 
 			break;
 		case 22 ... 45:
@@ -2580,21 +2580,21 @@ void change_club(int new_club_idx, int new_player) {
 			manager.stadium.gymnasium.level = 2;
 			manager.stadium.car_park.level = 2;
 
-		    for (int i = 0; i < sizeof (manager.stadium.safety_rating); ++i) {
-			    manager.stadium.safety_rating[i] = 3;
+			for (int i = 0; i < sizeof (manager.stadium.safety_rating); ++i) {
+				manager.stadium.safety_rating[i] = 3;
 			}
 
-    		for (int i = 0; i < 4; ++i) {
-    			manager.stadium.capacity[i].seating = 5000;
-    			manager.stadium.capacity[i].terraces = 0;
-    			manager.stadium.conversion[i].level = 2;
-    			manager.stadium.area_covering[i].level = 2;
-    		}
+			for (int i = 0; i < 4; ++i) {
+				manager.stadium.capacity[i].seating = 5000;
+				manager.stadium.capacity[i].terraces = 0;
+				manager.stadium.conversion[i].level = 2;
+				manager.stadium.area_covering[i].level = 2;
+			}
 
-		    manager.price.league_match_seating = 13;
-		    manager.price.league_match_terrace = 11;
-		    manager.price.cup_match_seating = 16;
-		    manager.price.cup_match_terrace = 13;
+			manager.price.league_match_seating = 13;
+			manager.price.league_match_terrace = 11;
+			manager.price.cup_match_seating = 16;
+			manager.price.cup_match_terrace = 13;
 
 			break;
 		case 46 ... 69:
@@ -2608,21 +2608,21 @@ void change_club(int new_club_idx, int new_player) {
 			manager.stadium.gymnasium.level = 2;
 			manager.stadium.car_park.level = 1;
 
-		    for (int i = 0; i < sizeof (manager.stadium.safety_rating); ++i) {
-			    manager.stadium.safety_rating[i] = 2;
+			for (int i = 0; i < sizeof (manager.stadium.safety_rating); ++i) {
+				manager.stadium.safety_rating[i] = 2;
 			}
 
-    		for (int i = 0; i < 4; ++i) {
-    			manager.stadium.capacity[i].seating = 2500;
-    			manager.stadium.capacity[i].terraces = 0;
-    			manager.stadium.conversion[i].level = 1;
-    			manager.stadium.area_covering[i].level = 1;
-    		}
+			for (int i = 0; i < 4; ++i) {
+				manager.stadium.capacity[i].seating = 2500;
+				manager.stadium.capacity[i].terraces = 0;
+				manager.stadium.conversion[i].level = 1;
+				manager.stadium.area_covering[i].level = 1;
+			}
 
-		    manager.price.league_match_seating = 11;
-		    manager.price.league_match_terrace = 9;
-		    manager.price.cup_match_seating = 14;
-		    manager.price.cup_match_terrace = 11;
+			manager.price.league_match_seating = 11;
+			manager.price.league_match_terrace = 9;
+			manager.price.cup_match_seating = 14;
+			manager.price.cup_match_terrace = 11;
 
 			break;
 		case 70 ... 91:
@@ -2636,21 +2636,21 @@ void change_club(int new_club_idx, int new_player) {
 			manager.stadium.gymnasium.level = 1;
 			manager.stadium.car_park.level = 1;
 
-		    for (int i = 0; i < sizeof (manager.stadium.safety_rating); ++i) {
-			    manager.stadium.safety_rating[i] = 1;
+			for (int i = 0; i < sizeof (manager.stadium.safety_rating); ++i) {
+				manager.stadium.safety_rating[i] = 1;
 			}
 
-    		for (int i = 0; i < 4; ++i) {
-    			manager.stadium.capacity[i].seating = 1000;
-    			manager.stadium.capacity[i].terraces = 1;
-    			manager.stadium.conversion[i].level = 0;
-    			manager.stadium.area_covering[i].level = 0;
-    		}
+			for (int i = 0; i < 4; ++i) {
+				manager.stadium.capacity[i].seating = 1000;
+				manager.stadium.capacity[i].terraces = 1;
+				manager.stadium.conversion[i].level = 0;
+				manager.stadium.area_covering[i].level = 0;
+			}
 
-		    manager.price.league_match_seating = 9;
-		    manager.price.league_match_terrace = 7;
-		    manager.price.cup_match_seating = 12;
-		    manager.price.cup_match_terrace = 9;
+			manager.price.league_match_seating = 9;
+			manager.price.league_match_terrace = 7;
+			manager.price.cup_match_seating = 12;
+			manager.price.cup_match_terrace = 9;
 
 			break;
 		case 92 ... 113:
@@ -2664,21 +2664,21 @@ void change_club(int new_club_idx, int new_player) {
 			manager.stadium.gymnasium.level = 1;
 			manager.stadium.car_park.level = 0;
 
-		    for (int i = 0; i < sizeof (manager.stadium.safety_rating); ++i) {
-			    manager.stadium.safety_rating[i] = 0;
+			for (int i = 0; i < sizeof (manager.stadium.safety_rating); ++i) {
+				manager.stadium.safety_rating[i] = 0;
 			}
 
-    		for (int i = 0; i < 4; ++i) {
-    			manager.stadium.capacity[i].seating = 500;
-    			manager.stadium.capacity[i].terraces = 1;
-    			manager.stadium.conversion[i].level = 0;
-    			manager.stadium.area_covering[i].level = 0;
-    		}
+			for (int i = 0; i < 4; ++i) {
+				manager.stadium.capacity[i].seating = 500;
+				manager.stadium.capacity[i].terraces = 1;
+				manager.stadium.conversion[i].level = 0;
+				manager.stadium.area_covering[i].level = 0;
+			}
 
-		    manager.price.league_match_seating = 7;
-		    manager.price.league_match_terrace = 5;
-		    manager.price.cup_match_seating = 10;
-		    manager.price.cup_match_terrace = 7;
+			manager.price.league_match_seating = 7;
+			manager.price.league_match_terrace = 5;
+			manager.price.cup_match_seating = 10;
+			manager.price.cup_match_terrace = 7;
 
 			break;
 		default:
