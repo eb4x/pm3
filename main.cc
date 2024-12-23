@@ -8,7 +8,7 @@
 
 #define HOME 0
 #define AWAY 1
-#define DEFAULT_MANAGER_NAME "J.Smith        "
+#define DEFAULT_MANAGER_NAME "J.Smith         "
 
 struct gamea {
 
