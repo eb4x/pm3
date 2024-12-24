@@ -484,7 +484,8 @@ struct gameb {
 		uint8_t padding[8];
 		int16_t player_index[24];
 
-		uint8_t misc000[76];
+		uint8_t misc000[75];
+		uint8_t league;
 
 		struct timetable {
 			struct week {
@@ -580,17 +581,25 @@ struct gamec::player& get_player(int16_t idx);
 void dump_player(struct gamec::player &player);
 void print_player_name(int16_t idx, bool newline = true);
 
+void dump_player_row(struct gamec::player &player, struct gameb::club &club);
+const char* determine_player_type(struct gamec::player &player);
+
+void dump_free_players();
+
 void print_help(char *command) {
-	fprintf(stderr, "Usage: %s -g 1-8 [-t 0-113] [-s] [-h] [ /path/to/saves/ ]\n", command);
+	fprintf(stderr, "Usage: %s -[abc] -g 1-8 [-f] [-t 0-113] [-s] [-h] [ /path/to/saves/ ]\n", command);
 	fprintf(stderr, "\n");
 	fprintf(stderr, "  -[abc]\n");
-	fprintf(stderr, "    dump game[abc]\n");
+	fprintf(stderr, "    Dump game[abc]\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "  -g 1-8, --game=1-8\n");
 	fprintf(stderr, "    Which savegame to work on\n");
 	fprintf(stderr, "  --club[=0..243]\n");
 	fprintf(stderr, "    Dump information on a single club within a savegame\n");
 	fprintf(stderr, "      (defaults to the club of player0, if index not provided)\n");
+	fprintf(stderr, "\n");
+	fprintf(stderr, "  -f\n");
+	fprintf(stderr, "    Print out free players\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "  -t 0-113\n");
 	fprintf(stderr, "    Change starting team to team ID\n");
@@ -614,7 +623,8 @@ int main(int argc, char *argv[])
 	int help = 0;
 	int opt_dump_gamea = 0,
 	    opt_dump_gameb = 0,
-	    opt_dump_gamec = 0;
+	    opt_dump_gamec = 0,
+	    opt_dump_free_players = 0;
 
 	char *path = NULL;
 	int game_nr = -1, opt_soup_up = 0;
@@ -631,7 +641,7 @@ int main(int argc, char *argv[])
 		{ 0, 0, 0, 0 }
 	};
 
-	while ((c = getopt_long(argc, argv, "abcg:t:hs", long_options, &optindex)) != -1) {
+	while ((c = getopt_long(argc, argv, "abcfg:t:hs", long_options, &optindex)) != -1) {
 		switch (c) {
 			case 0: // Long-options only
 				if (0 == strcmp(long_options[optindex].name, "club") && optarg) {
@@ -643,9 +653,10 @@ int main(int argc, char *argv[])
 					}
 				}
 				break;
-			case 'a': opt_dump_gamea = 1;     break;
-			case 'b': opt_dump_gameb = 1;     break;
-			case 'c': opt_dump_gamec = 1;     break;
+			case 'a': opt_dump_gamea = 1;        break;
+			case 'b': opt_dump_gameb = 1;        break;
+			case 'c': opt_dump_gamec = 1;        break;
+			case 'f': opt_dump_free_players = 1; break;
 			case 'g':
 				game_nr = atoi(optarg);
 				if (game_nr < 1 || game_nr > 8) {
@@ -662,8 +673,8 @@ int main(int argc, char *argv[])
 					return EXIT_FAILURE;
 				}
 				break;
-			case 'h': help = 1;               break;
-			case 's': opt_soup_up = 1;        break;
+			case 'h': help = 1;        break;
+			case 's': opt_soup_up = 1; break;
 			default: break;
 		}
 	}
@@ -738,6 +749,11 @@ int main(int argc, char *argv[])
 	if ( opt_dump_gamec ) {
 		printf("GAME%dC\n", game_nr);
 		dump_gamec();
+	}
+
+	if ( opt_dump_free_players ) {
+		printf("FREE PLAYERS\n");
+		dump_free_players();
 	}
 
 	if ( opt_soup_up ) {
@@ -2008,6 +2024,8 @@ void dump_club(struct gameb::club &club) {
 		printf("%02x ", club.misc000[i]);
 	}
 	printf("\n");
+	printf("League: %d\n", club.league);
+	printf("\n");
 
 
 	static const char *day[] = { "mon", "wed", "sat" };
@@ -2136,6 +2154,24 @@ void dump_player(struct gamec::player &p) {
 		p.unk2, p.unk4, p.unk5);
 
 	printf("%d weeks\n\n", (p.inj_away + 3 - 1) / 3);
+}
+
+void dump_player_row(struct gamec::player &p, struct gameb::club &club) {
+	static const char *foot[] = { "L", "R", "B" };
+
+	printf("%16.16s %1.1s %12.12s %2d %2d %2d %2d %2d %2d %2d %1.1s %1d %1d %2d %5d\n", club.name, determine_player_type(p), p.name, p.hn, p.tk, p.ps, p.sh, p.hd, p.cr, p.ft, foot[p.foot], p.aggr, p.morl, p.age, p.wage);
+}
+
+const char* determine_player_type(struct gamec::player &p) {
+	if (p.hn > p.tk && p.hn > p.ps && p.hn > p.sh) {
+		return "G";
+	} else if (p.tk > p.hn && p.tk > p.ps && p.tk > p.sh) {
+		return "D";
+	} else if (p.ps > p.hd && p.ps > p.tk && p.ps > p.sh) {
+		return "M";
+	}
+
+	return "A";
 }
 
 void print_player_name(int16_t idx, bool newline) {
@@ -2724,4 +2760,23 @@ void change_club(int new_club_idx, int player) {
 
 	strncpy(gameb.club[new_club_idx].manager, gameb.club[old_club_idx].manager, 16);
 	strncpy(gameb.club[old_club_idx].manager, DEFAULT_MANAGER_NAME, 16);
+}
+
+void dump_free_players() {
+	printf("CLUB NAME        PLAYER NAME    HN TK PS SH HD CR FT F M A AG  WAGES\n");
+	for (int i = 0; i < 114; ++i) {
+		struct gameb::club &club = get_club(i);
+		for (int i = 0; i < 24; ++i) {
+			if (club.player_index[i] == -1) {
+				continue;
+			}
+
+			struct gamec::player &p = gamec.player[ club.player_index[i] ];
+			if (club.league == 0 || p.contract != 0) {
+				continue;
+			}
+
+			dump_player_row(p, club);
+		}
+	}
 }
