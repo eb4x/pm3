@@ -590,6 +590,9 @@ void print_help(char *command) {
 	fprintf(stderr, "\n");
 	fprintf(stderr, "  -g 1-8, --game=1-8\n");
 	fprintf(stderr, "    Which savegame to work on\n");
+	fprintf(stderr, "  --club[=0..243]\n");
+	fprintf(stderr, "    Dump information on a single club within a savegame\n");
+	fprintf(stderr, "      (defaults to the club of player0, if index not provided)\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "  -t 0-113\n");
 	fprintf(stderr, "    Change starting team to team ID\n");
@@ -612,14 +615,16 @@ int main(int argc, char *argv[])
 	int c, optindex = 0;
 	int help = 0;
 	int opt_dump_gamea = 0,
-		opt_dump_gameb = 0,
-		opt_dump_gamec = 0;
+	    opt_dump_gameb = 0,
+	    opt_dump_gamec = 0;
 
 	char *path = NULL;
 	int game_nr = -1, opt_soup_up = 0;
 	int opt_new_club_idx = -1;
+	int opt_club_idx = -2;
 
 	static struct option long_options[] = {
+		{ "club",    optional_argument, &opt_club_idx, -1 },
 		{ "game",    required_argument, 0, 'g' },
 		{ "help",    no_argument,       0, 'h' },
 		{ "team",    no_argument,       0, 't' },
@@ -630,6 +635,16 @@ int main(int argc, char *argv[])
 
 	while ((c = getopt_long(argc, argv, "abcg:t:hs", long_options, &optindex)) != -1) {
 		switch (c) {
+			case 0: // Long-options only
+				if (0 == strcmp(long_options[optindex].name, "club") && optarg) {
+					opt_club_idx = atoi(optarg);
+					if (opt_club_idx < 0 || opt_club_idx >= CLUB_IDX_MAX) {
+						fprintf(stderr, "Invalid club index: %d\n", opt_club_idx);
+						print_help(argv[0]);
+						return EXIT_FAILURE;
+					}
+				}
+				break;
 			case 'a': opt_dump_gamea = 1;     break;
 			case 'b': opt_dump_gameb = 1;     break;
 			case 'c': opt_dump_gamec = 1;     break;
@@ -698,6 +713,14 @@ int main(int argc, char *argv[])
 	if ( opt_dump_gameb ) {
 		printf("GAME%dB\n", game_nr);
 		dump_gameb();
+	}
+
+	if ( opt_club_idx != -2 ) {
+		if (opt_club_idx == -1)
+			opt_club_idx = gamea.manager[0].club_idx;
+
+		struct gameb::club &club = get_club(opt_club_idx);
+		dump_club(club);
 	}
 
 	if ( opt_dump_gamec ) {
