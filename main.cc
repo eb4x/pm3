@@ -656,7 +656,14 @@ int main(int argc, char *argv[])
 					return EXIT_FAILURE;
 				}
 				break;
-			case 't': opt_new_club_idx = atoi(optarg); break;
+			case 't':
+				opt_new_club_idx = atoi(optarg);
+				if (opt_new_club_idx < 0 || opt_new_club_idx >= 114) {
+					fprintf(stderr, "Invalid new club index: %d\n", opt_new_club_idx)
+					print_help(argv[0]);
+					return EXIT_FAILURE;
+				}
+				break;
 			case 'h': help = 1;               break;
 			case 's': opt_soup_up = 1;        break;
 			default: break;
@@ -669,7 +676,7 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "path:%s: argv:%s\n", path, argv[optind]);
 	}
 
-	if (help || argc == 1 || opt_new_club_idx < -1 || opt_new_club_idx > 113) {
+	if (help || argc == 1) {
 		print_help(argv[0]);
 		return EXIT_SUCCESS;
 	}
