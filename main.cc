@@ -1,3 +1,5 @@
+// vim: ts=3 sw=3 nowrap
+
 #include <assert.h>
 #include <ctype.h>
 #include <getopt.h>
@@ -2689,5 +2691,3 @@ void change_club(int new_club_idx, int player) {
 	strncpy(gameb.club[new_club_idx].manager, gameb.club[old_club_idx].manager, 16);
 	strncpy(gameb.club[old_club_idx].manager, DEFAULT_MANAGER_NAME, 16);
 }
-// vim: ts=3 nowrap
-
