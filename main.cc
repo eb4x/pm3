@@ -648,7 +648,14 @@ int main(int argc, char *argv[])
 			case 'a': opt_dump_gamea = 1;     break;
 			case 'b': opt_dump_gameb = 1;     break;
 			case 'c': opt_dump_gamec = 1;     break;
-			case 'g': game_nr = atoi(optarg); break;
+			case 'g':
+				game_nr = atoi(optarg);
+				if (game_nr < 1 || game_nr > 8) {
+					fprintf(stderr, "Invalid savegame number: %d\n", game_nr);
+					print_help(argv[0]);
+					return EXIT_FAILURE;
+				}
+				break;
 			case 't': opt_new_club_idx = atoi(optarg); break;
 			case 'h': help = 1;               break;
 			case 's': opt_soup_up = 1;        break;
@@ -662,7 +669,7 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "path:%s: argv:%s\n", path, argv[optind]);
 	}
 
-	if (help || argc == 1 || game_nr < 1 || game_nr > 8 || opt_new_club_idx < -1 || opt_new_club_idx > 113) {
+	if (help || argc == 1 || opt_new_club_idx < -1 || opt_new_club_idx > 113) {
 		print_help(argv[0]);
 		return EXIT_SUCCESS;
 	}
