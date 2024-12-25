@@ -828,11 +828,6 @@ void dump_gamea() {
 	}
 	printf("\n");
 
-	printf("XXX Testing XXX\n");
-	for (int i = 0; i <  22; ++i) {
-		printf("%16.16s\n", gameb.club[ gamea.table.premier_league[i].club_idx ].name );
-	}
-
 	for (int i = 0; i < 114; ++i) {
 		switch (i) {
 			case   0:
@@ -1995,7 +1990,7 @@ void dump_club(struct gameb::club &club) {
 
 	for (int i = 0; i < sizeof (club.misc000); ++i) {
 		if ( i % 16 == 0 )
-			printf("\n[%3d]", i);
+			printf("\n[%3d] ", i);
 		printf("%02x ", club.misc000[i]);
 	}
 	printf("\n");
