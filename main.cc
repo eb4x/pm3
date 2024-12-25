@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define CLUB_IDX_MAX 244
+
 #define HOME 0
 #define AWAY 1
 #define DEFAULT_MANAGER_NAME "J.Smith         "
@@ -513,7 +515,7 @@ struct gameb {
 			uint8_t end;
 		} __attribute__ ((packed)) timetable;
 
-	} __attribute__ ((packed)) club[244];
+	} __attribute__ ((packed)) club[CLUB_IDX_MAX];
 
 } __attribute__ ((packed)) gameb;
 
@@ -749,7 +751,7 @@ void check_consistency()
 	for (int i = 0; i < 3932; ++i)
 		all[i] = -1;
 
-	for (int c = 0; c < 244; ++c) {
+	for (int c = 0; c < CLUB_IDX_MAX; ++c) {
 		fprintf(stderr, "Club[%3d]\n", c);
 		for (int p = 0; p < 24; ++p) {
 			if ( gameb.club[c].player_index[p] == -1 )
@@ -940,7 +942,7 @@ void dump_gamea() {
 	printf(" idx, club, goals, home_supporters, total_supporters, away_supporters, goals, idx club, \n");
 	for (int i = 0; i < 149; ++i) {
 		if ( gamea.cuppy.all[i].club[0].idx == -1 || gamea.cuppy.all[i].club[1].idx == -1 ||
-		     gamea.cuppy.all[i].club[0].idx > 244 || gamea.cuppy.all[i].club[1].idx > 244 ){
+		     gamea.cuppy.all[i].club[0].idx > CLUB_IDX_MAX || gamea.cuppy.all[i].club[1].idx > CLUB_IDX_MAX ){
 			printf("cuppy.all[%3d]: %04x %d %5d (%5d) %5d %d %04x\n", i,
 				gamea.cuppy.all[i].club[0].idx, gamea.cuppy.all[i].club[0].goals, gamea.cuppy.all[i].club[0].audience,
 				0,
@@ -1938,7 +1940,7 @@ void dump_gamea_manager(int player) {
 }
 
 void dump_gameb() {
-	for (int i = 0; i < 244; ++i) {
+	for (int i = 0; i < CLUB_IDX_MAX; ++i) {
 		struct gameb::club &club = get_club(i);
 		dump_club(club);
 	}
@@ -2039,7 +2041,7 @@ void dump_club(struct gameb::club &club) {
 }
 
 void print_club_name(int16_t idx, bool newline) {
-	assert( idx >= -1 && idx < 244);
+	assert( idx >= -1 && idx < CLUB_IDX_MAX);
 
 	if (idx == -1)
 		printf("Club: %d%s", idx, newline ? "\n" : "");
