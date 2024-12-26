@@ -659,7 +659,7 @@ int main(int argc, char *argv[])
 			case 't':
 				opt_new_club_idx = atoi(optarg);
 				if (opt_new_club_idx < 0 || opt_new_club_idx >= 114) {
-					fprintf(stderr, "Invalid new club index: %d\n", opt_new_club_idx)
+					fprintf(stderr, "Invalid new club index: %d\n", opt_new_club_idx);
 					print_help(argv[0]);
 					return EXIT_FAILURE;
 				}
