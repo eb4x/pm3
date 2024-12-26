@@ -455,10 +455,8 @@ struct gamea {
 			uint8_t played;
 			uint8_t won;
 			uint8_t u3;
-			uint8_t goals_f;
-			uint8_t u5;
-			uint8_t goals_a;
-			uint8_t u7;
+			uint16_t goals_f;
+			uint16_t goals_a;
 		} __attribute__ ((packed)) match_history[242];
 
 		uint8_t data160[1794];
@@ -1946,16 +1944,14 @@ void dump_gamea_manager(int player) {
 			manager.manager_of_the_year_awards);
 
 		for (int i = 0; i < 242; ++i)
-			printf("(%04x)%16.16s %2d %2d %2d %2d %2d %2d %2d\n",
+			printf("(%04x)%16.16s %2d %2d %2d %2d %2d\n",
 				manager.match_history[i].club,
 				gameb.club[manager.match_history[i].club].name,
 				manager.match_history[i].played,
 				manager.match_history[i].won,
 				manager.match_history[i].u3,
 				manager.match_history[i].goals_f,
-				manager.match_history[i].u5,
-				manager.match_history[i].goals_a,
-				manager.match_history[i].u7);
+				manager.match_history[i].goals_a);
 		printf("\n");
 
 
