@@ -2728,11 +2728,14 @@ void change_club(int new_club_idx, int player) {
 
 void dump_free_players() {
 	printf("CLUB NAME	    PLAYER NAME	HN TK PS SH HD CR FT F M A AG  WAGES\n");
-	for (int i = 0; i < 244; ++i) {
+    for (int i = 0; i < 114; ++i) {
 		struct gameb::club &club = get_club(i);
 		for (int i = 0; i < 24; ++i) {
+            if (club.player_index[i] == -1) {
+                continue;
+            }
 			struct gamec::player &p = gamec.player[ club.player_index[i] ];
-			if (club.league != 0 && p.hn < 100 && p.contract == 0) {
+			if (club.league != 0 && p.contract == 0) {
 				dump_player_row(p, club);
 			}
 		}
