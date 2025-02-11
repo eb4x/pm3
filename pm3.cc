@@ -13,6 +13,9 @@ struct gamea gamea;
 struct gameb gameb;
 struct gamec gamec;
 
+struct saves saves;
+struct prefs prefs;
+
 void check_consistency() {
 	int all[3932];
 	for (int i = 0; i < 3932; ++i)
@@ -383,4 +386,119 @@ void save_binaries(int game_nr, const char *game_path) {
 		free(savegame_path);
 		closedir(dirp);
 	}
+}
+
+void load_metadata(const char *game_path) {
+	size_t len = strlen(game_path);
+	bool has_trailing_slash = (len > 0 && game_path[len - 1] == '/');
+
+	DIR *dirp = opendir(game_path);
+	if (dirp == NULL) {
+		fprintf(stderr, "Could not open \"%s\": %s\n", game_path, strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+
+	struct dirent *entry = NULL;
+	while ((entry = readdir(dirp)) != NULL) {
+		if (0 == strcasecmp(entry->d_name, "SAVES"))
+			break;
+	}
+	if (entry == NULL) {
+		fprintf(stderr, "Could not find SAVES directory in %s\n", game_path);
+		exit(EXIT_FAILURE);
+	}
+
+	FILE *fp = NULL;
+
+	char *saves_path = NULL;
+	len = asprintf(&saves_path, "%s%s%s/SAVES.DIR",
+		game_path, has_trailing_slash ? "" : "/", entry->d_name);
+
+	fp = fopen(saves_path, "r");
+	if (fp == nullptr) {
+		fprintf(stderr, "Could not open \"%s\": %s\n", saves_path, strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+
+	struct saves { char hest[10]; } saves;
+	fread(&saves, sizeof (struct saves), 1, fp);
+
+	fclose(fp);
+	free(saves_path);
+
+	char *prefs_path = NULL;
+	len = asprintf(&prefs_path, "%s%s%s/PREFS",
+		game_path, has_trailing_slash ? "" : "/", entry->d_name);
+
+	fp = fopen(prefs_path, "r");
+	if (fp == nullptr) {
+		fprintf(stderr, "Could not open \"%s\": %s\n", prefs_path, strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+
+	struct prefs { char hest[10]; } prefs;
+	fread(&prefs, sizeof (struct prefs), 1, fp);
+
+	fclose(fp);
+	free(prefs_path);
+}
+
+void update_metadata(int game_nr) {
+    saves.game[game_nr - 1].year = gamea.year;
+    saves.game[game_nr - 1].turn = gamea.turn;
+    strcpy(saves.game[game_nr - 1].manager[0].name, gamea.manager[0].name);
+    strcpy(saves.game[game_nr - 1].manager[1].name, gamea.manager[1].name);
+    saves.game[game_nr - 1].manager[0].club_idx = gamea.manager[0].club_idx;
+    saves.game[game_nr - 1].manager[1].club_idx = gamea.manager[1].club_idx;
+}
+
+void save_metadata(const char *game_path) {
+	size_t len = strlen(game_path);
+	bool has_trailing_slash = (len > 0 && game_path[len - 1] == '/');
+
+	DIR *dirp = opendir(game_path);
+	if (dirp == NULL) {
+		fprintf(stderr, "Could not open \"%s\": %s\n", game_path, strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+
+	struct dirent *entry = NULL;
+	while ((entry = readdir(dirp)) != NULL) {
+		if (0 == strcasecmp(entry->d_name, "SAVES"))
+			break;
+	}
+	if (entry == NULL) {
+		fprintf(stderr, "Could not find SAVES directory in %s\n", game_path);
+		exit(EXIT_FAILURE);
+	}
+
+	FILE *fp = NULL;
+
+	char *saves_path = NULL;
+	len = asprintf(&saves_path, "%s%s%s/SAVES.DIR",
+		game_path, has_trailing_slash ? "" : "/", entry->d_name);
+
+	fp = fopen(saves_path, "w+");
+	if (fp == nullptr) {
+		fprintf(stderr, "Could not open \"%s\": %s\n", saves_path, strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+	fwrite(&saves, sizeof (struct saves), 1, fp);
+
+	fclose(fp);
+	free(saves_path);
+
+	char *prefs_path = NULL;
+	len = asprintf(&prefs_path, "%s%s%s/PREFS",
+		game_path, has_trailing_slash ? "" : "/", entry->d_name);
+
+	fp = fopen(prefs_path, "w+");
+	if (fp == nullptr) {
+		fprintf(stderr, "Could not open \"%s\": %s\n", prefs_path, strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+	fwrite(&prefs, sizeof (struct prefs), 1, fp);
+
+	fclose(fp);
+	free(prefs_path);
 }

@@ -560,6 +560,56 @@ struct gamec {
 } __attribute__ ((packed));
 extern struct gamec gamec;
 
+struct saves {
+    struct game {
+        uint16_t year;
+        uint16_t turn;
+        struct manager {
+            char name[16];
+            uint8_t club_idx;
+        } __attribute__ ((packed)) manager[2];
+        uint8_t misc000[162]; // Tactics files
+    } __attribute__ ((packed)) game[8];
+} __attribute__ ((packed));
+extern struct saves saves;
+
+struct prefs {
+    struct league_reports {
+        int16_t hide_premier_league;
+        int16_t hide_division_one;
+        int16_t hide_division_two;
+        int16_t hide_division_three;
+        int16_t hide_conference_league;
+    } __attribute__ ((packed)) league_reports;
+    struct cup_reports {
+        int16_t hide_fa_cup;
+        int16_t hide_league_cup;
+        int16_t hide_champions_cup;
+        int16_t hide_cup_winners_cup;
+        int16_t hide_uefa_cup;
+        int16_t hide_charity_shield;
+    } __attribute__ ((packed)) cup_reports;
+    int16_t hide_friendlies;
+    struct view_screens {
+        int16_t hide_results_monitor;
+        int16_t hide_next_matches;
+        int16_t hide_manager_of_the_month;
+    } __attribute__ ((packed)) view_screens;
+    struct interactive_matches {
+        int16_t match_graphics; // 0 = None, 1 = Strips, 2 = Numbers
+        int16_t unused1;
+        int16_t show_match_pictures;
+        int16_t speed; // Revered so 00 = 50, 31 = 1
+        int16_t unk1;
+        int16_t unused3;
+    } __attribute__ ((packed)) interactive_matches;
+    struct audio {
+        int16_t mute_sound_effects;
+        int16_t mute_music;
+    } __attribute__ ((packed)) audio;
+} __attribute__ ((packed));
+extern struct prefs prefs;
+
 void check_consistency();
 
 struct gameb::club& get_club(int idx);
@@ -572,5 +622,9 @@ void soup_up(int player = 0);
 
 void load_binaries(int game_nr, const char *game_path);
 void save_binaries(int game_nr, const char *game_path);
+
+void load_metadata(const char *game_path);
+void update_metadata(int game_nr);
+void save_metadata(const char *game_path);
 
 #endif
