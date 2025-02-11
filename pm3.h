@@ -627,4 +627,8 @@ void load_metadata(const char *game_path);
 void update_metadata(int game_nr);
 void save_metadata(const char *game_path);
 
+struct gamea *load_default_gamedata(const char *game_path);
+struct gameb *load_default_clubdata(const char *game_path);
+struct gamec *load_default_playdata(const char *game_path);
+
 #endif

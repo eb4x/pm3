@@ -502,3 +502,72 @@ void save_metadata(const char *game_path) {
 	fclose(fp);
 	free(prefs_path);
 }
+
+struct gamea *load_default_gamedata(const char *game_path) {
+	size_t len = strlen(game_path);
+	bool has_trailing_slash = (len > 0 && game_path[len - 1] == '/');
+
+	char *gamedata_path = NULL;
+	size_t res = asprintf(&gamedata_path, "%s%sgamedata.dat",
+		game_path, has_trailing_slash ? "" : "/");
+
+	FILE *fp = fopen(gamedata_path, "r");
+	if (fp == nullptr) {
+		fprintf(stderr, "Could not open \"%s\": %s\n", gamedata_path, strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+
+	struct gamea *gamedata = (struct gamea *) malloc(sizeof (struct gamea));
+	fread(gamedata, sizeof(struct gamea), 1, fp);
+
+	fclose(fp);
+	free(gamedata_path);
+
+	return gamedata;
+}
+
+struct gameb *load_default_clubdata(const char *game_path) {
+	size_t len = strlen(game_path);
+	bool has_trailing_slash = (len > 0 && game_path[len - 1] == '/');
+
+	char *clubdata_path = NULL;
+	size_t res = asprintf(&clubdata_path, "%s%sclubdata.dat",
+		game_path, has_trailing_slash ? "" : "/");
+
+	FILE *fp = fopen(clubdata_path, "r");
+	if (fp == nullptr) {
+		fprintf(stderr, "Could not open \"%s\": %s\n", clubdata_path, strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+
+	struct gameb *clubdata = (struct gameb *) malloc(sizeof (struct gameb));
+	fread(clubdata, sizeof(struct gameb), 1, fp);
+
+	fclose(fp);
+	free(clubdata_path);
+
+	return clubdata;
+}
+
+struct gamec *load_default_playdata(const char *game_path) {
+	size_t len = strlen(game_path);
+	bool has_trailing_slash = (len > 0 && game_path[len - 1] == '/');
+
+	char *playerdata_path = NULL;
+	size_t res = asprintf(&playerdata_path, "%s%splaydata.dat",
+		playerdata_path, has_trailing_slash ? "" : "/");
+
+	FILE *fp = fopen(playerdata_path, "r");
+	if (fp == nullptr) {
+		fprintf(stderr, "Could not open \"%s\": %s\n", playerdata_path, strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+
+	struct gamec *playerdata = (struct gamec *) malloc(sizeof (struct gamec));
+	fread(playerdata, sizeof(struct gamec), 1, fp);
+
+	fclose(fp);
+	free(playerdata_path);
+
+	return playerdata;
+}
