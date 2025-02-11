@@ -478,7 +478,29 @@ struct gameb {
 		uint8_t padding[8];
 		int16_t player_index[24];
 
-		uint8_t misc000[75];
+		uint8_t misc000[4];
+		struct kit {
+			uint8_t shirt_design;
+			uint8_t shirt_primary_color_r : 4;
+			uint8_t shirt_primary_color_g : 4;
+			uint8_t shirt_primary_color_b : 4;
+
+			uint8_t shirt_secondary_color_r : 4;
+			uint8_t shirt_secondary_color_g : 4;
+			uint8_t shirt_secondary_color_b : 4;
+
+			uint8_t shorts_color_r : 4;
+			uint8_t shorts_color_g : 4;
+			uint8_t shorts_color_b : 4;
+
+			uint8_t socks_color_r : 4;
+			uint8_t socks_color_g : 4;
+			uint8_t socks_color_b : 4;
+		} __attribute__ ((packed)) kit[3]; // 0=Home, 1=Away1, 2=Away2
+
+		uint8_t player_image;
+		uint8_t weekly_league_position[46];
+		uint8_t misc005[3];
 		uint8_t league;
 
 		struct timetable {
