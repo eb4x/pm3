@@ -150,7 +150,7 @@ struct gamea {
 	struct manager {
 		char name[16];
 		int16_t club_idx;
-		int16_t unk_number;
+		int16_t division;
 		uint16_t contract_length;
 
 		struct {
