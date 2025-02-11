@@ -1,3 +1,6 @@
+#ifndef _PM3_H
+#define _PM3_H
+
 #include <stdint.h>
 
 #define CLUB_IDX_MAX 244
@@ -553,3 +556,5 @@ struct gamec {
 
 	} __attribute__ ((packed))player[3932];
 } __attribute__ ((packed)) gamec;
+
+#endif
