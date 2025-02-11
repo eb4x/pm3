@@ -30,7 +30,7 @@ void dump_player_row(struct gamec::player &player, struct gameb::club &club);
 void dump_free_players();
 
 void print_help(char *command) {
-	fprintf(stderr, "Usage: %s -[abc] -g 1-8 [-f] [-t 0-113] [-s] [-h] [ /path/to/saves/ ]\n", command);
+	fprintf(stderr, "Usage: %s -[abc] -g 1-8 [-f] [-t 0-113] [-s] [-h] [ /path/to/pm3/ ]\n", command);
 	fprintf(stderr, "\n");
 	fprintf(stderr, "  -[abc]\n");
 	fprintf(stderr, "    Dump game[abc]\n");
@@ -53,8 +53,8 @@ void print_help(char *command) {
 	fprintf(stderr, "  -h\n");
 	fprintf(stderr, "    Displays this help message\n");
 	fprintf(stderr, "\n");
-	fprintf(stderr, "  [ /path/to/saves/ ]\n");
-	fprintf(stderr, "    optionally provide a path to saves\n");
+	fprintf(stderr, "  [ /path/to/pm3/ ]\n");
+	fprintf(stderr, "    optionally provide a path to pm3\n");
 }
 
 int main(int argc, char *argv[])
@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 	    opt_dump_gamec = 0,
 	    opt_dump_free_players = 0;
 
-	char *path = NULL;
+	const char *path = NULL;
 	int game_nr = -1, opt_soup_up = 0;
 	int opt_new_club_idx = -1;
 	int opt_club_idx = -2;
@@ -123,6 +123,8 @@ int main(int argc, char *argv[])
 		/* assume a path has been provided */
 		path = argv[optind];
 		fprintf(stderr, "path:%s: argv:%s\n", path, argv[optind]);
+	} else {
+		path = ".";
 	}
 
 	if (help || argc == 1) {
@@ -138,35 +140,7 @@ int main(int argc, char *argv[])
 	assert(sizeof (struct gameb::club)   == 0x023A);
 	assert(sizeof (struct gamec::player) == 0x0028);
 
-	char *gamexa = NULL, *gamexb = NULL, *gamexc = NULL;
-	FILE *fga = NULL,    *fgb = NULL,    *fgc = NULL;
-
-	size_t gamexa_len = asprintf(&gamexa, "%sGAME%.1dA", path != NULL ? path : "", game_nr);
-	fga = fopen(gamexa, "r");
-	if (fga == NULL) {
-		printf("Could not open file: %s\n", gamexa);
-		exit(EXIT_FAILURE);
-	}
-	fread(&gamea, sizeof (struct gamea), 1, fga);
-	fclose(fga);
-
-	size_t gamexb_len = asprintf(&gamexb, "%sGAME%.1dB", path != NULL ? path : "", game_nr);
-	fgb = fopen(gamexb, "r");
-	if (fgb == NULL) {
-		printf("Could not open file: %s\n", gamexb);
-		exit(EXIT_FAILURE);
-	}
-	fread(&gameb, sizeof (struct gameb), 1, fgb);
-	fclose(fgb);
-
-	size_t gamexc_len = asprintf(&gamexc, "%sGAME%.1dC", path != NULL ? path : "", game_nr);
-	fgc = fopen(gamexc, "r");
-	if (fgb == NULL) {
-		printf("Could not open file: %s\n", gamexc);
-		exit(EXIT_FAILURE);
-	}
-	fread(&gamec, sizeof (struct gamec), 1, fgc);
-	fclose(fgc);
+	load_binaries(game_nr, path);
 
 	if ( opt_dump_gamea ) {
 		printf("GAME%dA\n", game_nr);
@@ -199,40 +173,13 @@ int main(int argc, char *argv[])
 	if ( opt_soup_up ) {
 		printf("Souping up!");
 		soup_up();
-
-		fga = fopen(gamexa, "w+");
-		fwrite(&gamea, sizeof (struct gamea), 1, fga);
-		fclose(fga);
-
-		fgb = fopen(gamexb, "w+");
-		fwrite(&gameb, sizeof (struct gameb), 1, fgb);
-		fclose(fgb);
-
-		fgc = fopen(gamexc, "w+");
-		fwrite(&gamec, sizeof (struct gamec), 1, fgc);
-		fclose(fgc);
+		save_binaries(game_nr, path);
 	}
 
 	if ( opt_new_club_idx != -1 ) {
 		change_club(opt_new_club_idx);
-
-		fga = fopen(gamexa, "w+");
-		fwrite(&gamea, sizeof (struct gamea), 1, fga);
-		fclose(fga);
-
-		fgb = fopen(gamexb, "w+");
-		fwrite(&gameb, sizeof (struct gameb), 1, fgb);
-		fclose(fgb);
-
-		fgc = fopen(gamexc, "w+");
-		fwrite(&gamec, sizeof (struct gamec), 1, fgc);
-		fclose(fgc);
+		save_binaries(game_nr, path);
 	}
-
-
-	free(gamexa);
-	free(gamexb);
-	free(gamexc);
 
 	return EXIT_SUCCESS;
 }

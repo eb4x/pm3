@@ -1,4 +1,6 @@
 #include <assert.h>
+#include <dirent.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -290,5 +292,95 @@ void soup_up(int player) {
 		player.ft = 99;
 
 		player.morl = 8;
+	}
+}
+
+void load_binaries(int game_nr, const char *game_path) {
+	size_t len = strlen(game_path);
+	bool has_trailing_slash = (len > 0 && game_path[len - 1] == '/');
+
+	void *game_data[] = { &gamea, &gameb, &gamec };
+	size_t game_data_size[] = {
+		sizeof (struct gamea),
+		sizeof (struct gameb),
+		sizeof (struct gamec)
+	};
+
+	for (int i = 0; i < 3; ++i) {
+		DIR *dirp = opendir(game_path);
+		if (dirp == NULL) {
+			fprintf(stderr, "Could not open \"%s\": %s\n", game_path, strerror(errno));
+			exit(EXIT_FAILURE);
+		}
+
+		struct dirent *entry = NULL;
+		while ((entry = readdir(dirp)) != NULL) {
+			if (0 == strcasecmp(entry->d_name, "SAVES"))
+				break;
+		}
+		if (entry == NULL) {
+			fprintf(stderr, "Could not find SAVES directory in %s\n", game_path);
+			exit(EXIT_FAILURE);
+		}
+
+		char *savegame_path = NULL;
+		size_t res = asprintf(&savegame_path, "%s%s%s/GAME%.1d%c",
+			game_path, has_trailing_slash ? "" : "/", entry->d_name, game_nr, 'A' + i);
+
+		FILE *fp = fopen(savegame_path, "r");
+		if (fp == nullptr) {
+			fprintf(stderr, "Could not open \"%s\": %s\n", savegame_path, strerror(errno));
+			exit(EXIT_FAILURE);
+		}
+		fread(game_data[i], game_data_size[i], 1, fp);
+
+		fclose(fp);
+		free(savegame_path);
+		closedir(dirp);
+	}
+}
+
+void save_binaries(int game_nr, const char *game_path) {
+	size_t len = strlen(game_path);
+	bool has_trailing_slash = (len > 0 && game_path[len - 1] == '/');
+
+	void *game_data[] = { &gamea, &gameb, &gamec };
+	size_t game_data_size[] = {
+		sizeof (struct gamea),
+		sizeof (struct gameb),
+		sizeof (struct gamec)
+	};
+
+	for (int i = 0; i < 3; ++i) {
+		DIR *dirp = opendir(game_path);
+		if (dirp == NULL) {
+			fprintf(stderr, "Could not open \"%s\": %s\n", game_path, strerror(errno));
+			exit(EXIT_FAILURE);
+		}
+
+		struct dirent *entry = NULL;
+		while ((entry = readdir(dirp)) != NULL) {
+			if (0 == strcasecmp(entry->d_name, "SAVES"))
+				break;
+		}
+		if (entry == NULL) {
+			fprintf(stderr, "Could not find SAVES directory in %s\n", game_path);
+			exit(EXIT_FAILURE);
+		}
+
+		char *savegame_path = NULL;
+		size_t res = asprintf(&savegame_path, "%s%s%s/GAME%.1d%c",
+			game_path, has_trailing_slash ? "" : "/", entry->d_name, game_nr, 'A' + i);
+
+		FILE *fp = fopen(savegame_path, "w+");
+		if (fp == nullptr) {
+			fprintf(stderr, "Could not open \"%s\": %s\n", savegame_path, strerror(errno));
+			exit(EXIT_FAILURE);
+		}
+		fwrite(game_data[i], game_data_size[i], 1, fp);
+
+		fclose(fp);
+		free(savegame_path);
+		closedir(dirp);
 	}
 }
