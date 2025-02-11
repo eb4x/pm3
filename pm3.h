@@ -464,7 +464,8 @@ struct gamea {
 	uint16_t inc_number2;
 	uint16_t inc_number3;
 
-} __attribute__ ((packed)) gamea;
+} __attribute__ ((packed));
+extern struct gamea gamea;
 
 struct gameb {
 	struct club {
@@ -509,7 +510,8 @@ struct gameb {
 
 	} __attribute__ ((packed)) club[CLUB_IDX_MAX];
 
-} __attribute__ ((packed)) gameb;
+} __attribute__ ((packed));
+extern struct gameb gameb;
 
 struct gamec {
 	struct player {
@@ -555,6 +557,17 @@ struct gamec {
 		uint8_t intense : 4;
 
 	} __attribute__ ((packed))player[3932];
-} __attribute__ ((packed)) gamec;
+} __attribute__ ((packed));
+extern struct gamec gamec;
+
+void check_consistency();
+
+struct gameb::club& get_club(int idx);
+struct gamec::player& get_player(int16_t idx);
+
+const char* determine_player_type(struct gamec::player &player);
+void change_club(int new_club_idx, int player = 0);
+
+void soup_up(int player = 0);
 
 #endif
