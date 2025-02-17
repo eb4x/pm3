@@ -10,28 +10,22 @@
 
 #include "pm3.h"
 
-#define DEFAULT_MANAGER_NAME "J.Smith         "
-
-
 void dump_gamea();
 void dump_gamea_manager(int player = 0);
 void dump_gamea_match_summary();
 void fax_match_summary();
 
 void dump_gameb();
-struct gameb::club& get_club(int idx);
 
 void dump_club(struct gameb::club &club);
 void print_club_name(int16_t idx, bool newline = true);
 
 void dump_gamec();
-struct gamec::player& get_player(int16_t idx);
 
 void dump_player(struct gamec::player &player);
 void print_player_name(int16_t idx, bool newline = true);
 
 void dump_player_row(struct gamec::player &player, struct gameb::club &club);
-const char* determine_player_type(struct gamec::player &player);
 
 void dump_free_players();
 
@@ -62,9 +56,6 @@ void print_help(char *command) {
     fprintf(stderr, "  [ /path/to/saves/ ]\n");
     fprintf(stderr, "    optionally provide a path to saves\n");
 }
-
-void soup_up(int player = 0);
-void change_club(int new_club_idx, int player = 0);
 
 int main(int argc, char *argv[])
 {
@@ -206,6 +197,7 @@ int main(int argc, char *argv[])
     }
 
     if ( opt_soup_up ) {
+        printf("Souping up!");
         soup_up();
 
         fga = fopen(gamexa, "w+");
@@ -243,46 +235,6 @@ int main(int argc, char *argv[])
     free(gamexc);
 
     return EXIT_SUCCESS;
-}
-
-void check_consistency()
-{
-    int all[3932];
-    for (int i = 0; i < 3932; ++i)
-        all[i] = -1;
-
-    for (int c = 0; c < CLUB_IDX_MAX; ++c) {
-        fprintf(stderr, "Club[%3d]\n", c);
-        for (int p = 0; p < 24; ++p) {
-            if ( gameb.club[c].player_index[p] == -1 )
-                continue;
-
-            if (all[ gameb.club[c].player_index[p] ] == -1) {
-
-                all[ gameb.club[c].player_index[p] ] = c;
-                printf("Added %d %12.12s to %16.16s\n",
-                    gameb.club[c].player_index[p],
-                    gamec.player[    gameb.club[c].player_index[p] ].name,
-                    gameb.club[c].name);
-
-            } else {
-                printf("Duplicate. %4d %12.12s plays for\n"
-                    "%16.16s AND %16.16s\n",
-                    gameb.club[c].player_index[p],
-                    gamec.player[    gameb.club[c].player_index[p] ].name,
-                    gameb.club[ all[ gameb.club[c].player_index[p] ] ].name,
-                    gameb.club[c].name);
-            }
-        }
-    }
-
-    for (int i = 0; i < sizeof(all); ++i) {
-        if ( all[i] != -1)
-            continue;
-
-        fprintf(stderr, "%4d %12.12s is without a club.\n",
-            i, gamec.player[i].name);
-    }
 }
 
 void dump_gamea() {
@@ -1443,10 +1395,6 @@ void dump_gameb() {
     }
 }
 
-struct gameb::club& get_club(int idx) {
-        return gameb.club[idx];
-}
-
 void dump_club(struct gameb::club &club) {
     printf("Club   : %16.16s\n", club.name);
     printf("Manager: %16.16s\n", club.manager);
@@ -1548,15 +1496,11 @@ void print_club_name(int16_t idx, bool newline) {
         printf("Club: %16.16s%s", gameb.club[idx].name, newline ? "\n" : "");
 }
 
-
 void dump_gamec() {
     for (int i = 0; i < 3932; ++i) {
         struct gamec::player &player = get_player(i);
         dump_player(player);
     }
-}
-struct gamec::player& get_player(int16_t idx) {
-    return gamec.player[idx];
 }
 
 void dump_player(struct gamec::player &p) {
@@ -1609,18 +1553,6 @@ void dump_player_row(struct gamec::player &p, struct gameb::club &club) {
     static const char *foot[] = { "L", "R", "B" };
 
     printf("%16.16s %1.1s %12.12s %2d %2d %2d %2d %2d %2d %2d %1.1s %1d %1d %2d %5d\n", club.name, determine_player_type(p), p.name, p.hn, p.tk, p.ps, p.sh, p.hd, p.cr, p.ft, foot[p.foot], p.aggr, p.morl, p.age, p.wage);
-}
-
-const char* determine_player_type(struct gamec::player &p) {
-    if (p.hn > p.tk && p.hn > p.ps && p.hn > p.sh) {
-        return "G";
-    } else if (p.tk > p.hn && p.tk > p.ps && p.tk > p.sh) {
-        return "D";
-    } else if (p.ps > p.hd && p.ps > p.tk && p.ps > p.sh) {
-        return "M";
-    }
-
-    return "A";
 }
 
 void print_player_name(int16_t idx, bool newline) {
@@ -1984,232 +1916,6 @@ void dump_gamea_match_summary()
         printf("\n\n");
 }
 
-void soup_up(int player) {
-    printf("Souping up!");
-
-    struct gamea::manager &manager = gamea.manager[player];
-
-    print_club_name(manager.club_idx);
-
-    for (int i = 0; i < 20; ++i) {
-        struct gamea::manager::employee &employee = manager.employee[i];
-        printf("Employee: %14.14s\n", employee.name);
-        employee.skill = 99;
-        //employee.age = i % 16;
-    }
-
-    struct gameb::club &club = gameb.club[ manager.club_idx ];
-
-    for (int p = 0; p < 24; ++p) {
-        if (club.player_index[p] == -1)
-            continue;
-
-        print_player_name(club.player_index[p]);
-        struct gamec::player &player = gamec.player[ club.player_index[p] ];
-
-        player.hn = 97;
-        player.tk = 97;
-        player.ps = 97;
-        player.sh = 97;
-
-        switch ( p ) {
-            case  0:
-            case 11:
-            case 15:
-                player.hn = 99; break;
-
-            case  1:
-            case  2:
-            case  4:
-            case  5:
-            case 12:
-            case 16:
-            case 19:
-            case 22:
-                player.tk = 99; break;
-
-            case  3:
-            case 10:
-            case 13:
-            case 17:
-            case 20:
-                player.ps = 99; break;
-
-            case  6:
-            case  7:
-            case  8:
-            case  9:
-            case 14:
-            case 18:
-            case 21:
-            case 23:
-                player.sh = 99; break;
-
-            default: break;
-        }
-
-        player.hd = 99;
-        player.cr = 99;
-        player.ft = 99;
-
-        player.morl = 8;
-    }
-}
-
-void change_club(int new_club_idx, int player) {
-    struct gamea::manager &manager = gamea.manager[player];
-    int old_club_idx = manager.club_idx;
-    manager.club_idx = new_club_idx;
-
-    switch (manager.club_idx) {
-        case 0 ... 21:
-            manager.unk_number = 0;
-            manager.stadium.ground_facilities.level = 3;
-            manager.stadium.supporters_club.level = 3;
-            manager.stadium.flood_lights.level = 2;
-            manager.stadium.scoreboard.level = 3;
-            manager.stadium.undersoil_heating.level = 1;
-            manager.stadium.changing_rooms.level = 2;
-            manager.stadium.gymnasium.level = 3;
-            manager.stadium.car_park.level = 2;
-
-            for (int i = 0; i < sizeof (manager.stadium.safety_rating); ++i) {
-                manager.stadium.safety_rating[i] = 4;
-            }
-
-            for (int i = 0; i < 4; ++i) {
-                manager.stadium.capacity[i].seating = 10000;
-                manager.stadium.capacity[i].terraces = 0;
-                manager.stadium.conversion[i].level= 2;
-                manager.stadium.area_covering[i].level= 3;
-            }
-
-            manager.price.league_match_seating = 15;
-            manager.price.league_match_terrace = 13;
-            manager.price.cup_match_seating = 18;
-            manager.price.cup_match_terrace = 15;
-
-            break;
-        case 22 ... 45:
-            manager.unk_number = 1;
-            manager.stadium.ground_facilities.level = 2;
-            manager.stadium.supporters_club.level = 2;
-            manager.stadium.flood_lights.level = 2;
-            manager.stadium.scoreboard.level = 2;
-            manager.stadium.undersoil_heating.level = 1;
-            manager.stadium.changing_rooms.level = 2;
-            manager.stadium.gymnasium.level = 2;
-            manager.stadium.car_park.level = 2;
-
-            for (int i = 0; i < sizeof (manager.stadium.safety_rating); ++i) {
-                manager.stadium.safety_rating[i] = 3;
-            }
-
-            for (int i = 0; i < 4; ++i) {
-                manager.stadium.capacity[i].seating = 5000;
-                manager.stadium.capacity[i].terraces = 0;
-                manager.stadium.conversion[i].level = 2;
-                manager.stadium.area_covering[i].level = 2;
-            }
-
-            manager.price.league_match_seating = 13;
-            manager.price.league_match_terrace = 11;
-            manager.price.cup_match_seating = 16;
-            manager.price.cup_match_terrace = 13;
-
-            break;
-        case 46 ... 69:
-            manager.unk_number = 2;
-            manager.stadium.ground_facilities.level = 2;
-            manager.stadium.supporters_club.level = 2;
-            manager.stadium.flood_lights.level = 1;
-            manager.stadium.scoreboard.level = 2;
-            manager.stadium.undersoil_heating.level = 0;
-            manager.stadium.changing_rooms.level = 1;
-            manager.stadium.gymnasium.level = 2;
-            manager.stadium.car_park.level = 1;
-
-            for (int i = 0; i < sizeof (manager.stadium.safety_rating); ++i) {
-                manager.stadium.safety_rating[i] = 2;
-            }
-
-            for (int i = 0; i < 4; ++i) {
-                manager.stadium.capacity[i].seating = 2500;
-                manager.stadium.capacity[i].terraces = 0;
-                manager.stadium.conversion[i].level = 1;
-                manager.stadium.area_covering[i].level = 1;
-            }
-
-            manager.price.league_match_seating = 11;
-            manager.price.league_match_terrace = 9;
-            manager.price.cup_match_seating = 14;
-            manager.price.cup_match_terrace = 11;
-
-            break;
-        case 70 ... 91:
-            manager.unk_number = 3;
-            manager.stadium.ground_facilities.level = 1;
-            manager.stadium.supporters_club.level = 1;
-            manager.stadium.flood_lights.level = 1;
-            manager.stadium.scoreboard.level = 1;
-            manager.stadium.undersoil_heating.level = 0;
-            manager.stadium.changing_rooms.level = 1;
-            manager.stadium.gymnasium.level = 1;
-            manager.stadium.car_park.level = 1;
-
-            for (int i = 0; i < sizeof (manager.stadium.safety_rating); ++i) {
-                manager.stadium.safety_rating[i] = 1;
-            }
-
-            for (int i = 0; i < 4; ++i) {
-                manager.stadium.capacity[i].seating = 1000;
-                manager.stadium.capacity[i].terraces = 1;
-                manager.stadium.conversion[i].level = 0;
-                manager.stadium.area_covering[i].level = 0;
-            }
-
-            manager.price.league_match_seating = 9;
-            manager.price.league_match_terrace = 7;
-            manager.price.cup_match_seating = 12;
-            manager.price.cup_match_terrace = 9;
-
-            break;
-        case 92 ... 113:
-            manager.unk_number = 4;
-            manager.stadium.ground_facilities.level = 1;
-            manager.stadium.supporters_club.level = 1;
-            manager.stadium.flood_lights.level = 0;
-            manager.stadium.scoreboard.level = 1;
-            manager.stadium.undersoil_heating.level = 0;
-            manager.stadium.changing_rooms.level = 0;
-            manager.stadium.gymnasium.level = 1;
-            manager.stadium.car_park.level = 0;
-
-            for (int i = 0; i < sizeof (manager.stadium.safety_rating); ++i) {
-                manager.stadium.safety_rating[i] = 0;
-            }
-
-            for (int i = 0; i < 4; ++i) {
-                manager.stadium.capacity[i].seating = 500;
-                manager.stadium.capacity[i].terraces = 1;
-                manager.stadium.conversion[i].level = 0;
-                manager.stadium.area_covering[i].level = 0;
-            }
-
-            manager.price.league_match_seating = 7;
-            manager.price.league_match_terrace = 5;
-            manager.price.cup_match_seating = 10;
-            manager.price.cup_match_terrace = 7;
-
-            break;
-        default:
-            fprintf(stderr, "Invalid Club index (%i)\n", new_club_idx);
-            exit(EXIT_FAILURE);
-    }
-
-    strncpy(gameb.club[new_club_idx].manager, gameb.club[old_club_idx].manager, 16);
-    strncpy(gameb.club[old_club_idx].manager, DEFAULT_MANAGER_NAME, 16);
-}
 
 void dump_free_players() {
     printf("CLUB NAME        PLAYER NAME    HN TK PS SH HD CR FT F M A AG  WAGES\n");
