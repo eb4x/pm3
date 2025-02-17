@@ -1036,412 +1036,409 @@ void dump_gamea_manager(int player) {
 
 //        printf("d6 01, %d, %12.12s\n", 0x01d6, gamec.player[0x01d6].name);
 
-        /* same 16bit numbers can show up multiple times in this data-pile.
-         * suspect it's player (gamec) data somehow
-         * */
-        printf("\n--- data150 --- 0x01d6 = 365. repeats alot.\n");
-        for (int i = 0; i < sizeof (manager.data150); ++i) {
-            if ( i % 16 == 0 )
-                printf("\n[%4d]", i);
-            printf(" %02x", manager.data150[i]);
-        }
+    /* same 16bit numbers can show up multiple times in this data-pile.
+     * suspect it's player (gamec) data somehow
+     * */
+    printf("\n--- data150 --- 0x01d6 = 365. repeats alot.\n");
+    for (int i = 0; i < sizeof (manager.data150); ++i) {
+        if ( i % 16 == 0 )
+            printf("\n[%4d]", i);
+        printf(" %02x", manager.data150[i]);
+    }
+    printf("\n");
+
+    struct gamea::manager::stadium &stadium = manager.stadium;
+
+    printf("Construction\n");
+    for (int i = 0; i < 4; ++i) {
+        printf("[%20.20s] expand_capacity = %d, %d\n",
+            stadium.stand[i].name, stadium.seating_build[i].level, stadium.seating_build[i].time);
+        printf("[%20.20s] convert_to_seating = %d, %d\n",
+            stadium.stand[i].name, stadium.conversion[i].level, stadium.conversion[i].time);
+        printf("[%20.20s] area_covering = %d, %d\n",
+            stadium.stand[i].name, stadium.area_covering[i].level, stadium.area_covering[i].time);
         printf("\n");
+    }
 
-        struct gamea::manager::stadium &stadium = manager.stadium;
+    printf("ground_facilities = %d, %d\n", stadium.ground_facilities.level, stadium.ground_facilities.time);
+    printf("supporters_club   = %d, %d\n", stadium.supporters_club.level,   stadium.supporters_club.time);
+    printf("flood_lights      = %d, %d\n", stadium.flood_lights.level,      stadium.flood_lights.time);
+    printf("scoreboard        = %d, %d\n", stadium.scoreboard.level,        stadium.scoreboard.time);
+    printf("undersoil_heating = %d, %d\n", stadium.undersoil_heating.level, stadium.undersoil_heating.time);
+    printf("changing_rooms    = %d, %d\n", stadium.changing_rooms.level,    stadium.changing_rooms.time);
+    printf("gymnasium         = %d, %d\n", stadium.gymnasium.level,         stadium.gymnasium.time);
+    printf("car_park          = %d, %d\n", stadium.car_park.level,          stadium.car_park.time);
 
-        printf("Construction\n");
-        for (int i = 0; i < 4; ++i) {
-            printf("[%20.20s] expand_capacity = %d, %d\n",
-                stadium.stand[i].name, stadium.seating_build[i].level, stadium.seating_build[i].time);
-            printf("[%20.20s] convert_to_seating = %d, %d\n",
-                stadium.stand[i].name, stadium.conversion[i].level, stadium.conversion[i].time);
-            printf("[%20.20s] area_covering = %d, %d\n",
-                stadium.stand[i].name, stadium.area_covering[i].level, stadium.area_covering[i].time);
-            printf("\n");
-        }
+    printf("safety rating     =");
+    for (int i = 0; i < sizeof (stadium.safety_rating); ++i)
+        printf(" %02x", stadium.safety_rating[i]);
+    printf("\n");
 
-        printf("ground_facilities = %d, %d\n", stadium.ground_facilities.level, stadium.ground_facilities.time);
-        printf("supporters_club   = %d, %d\n", stadium.supporters_club.level,   stadium.supporters_club.time);
-        printf("flood_lights      = %d, %d\n", stadium.flood_lights.level,      stadium.flood_lights.time);
-        printf("scoreboard        = %d, %d\n", stadium.scoreboard.level,        stadium.scoreboard.time);
-        printf("undersoil_heating = %d, %d\n", stadium.undersoil_heating.level, stadium.undersoil_heating.time);
-        printf("changing_rooms    = %d, %d\n", stadium.changing_rooms.level,    stadium.changing_rooms.time);
-        printf("gymnasium         = %d, %d\n", stadium.gymnasium.level,         stadium.gymnasium.time);
-        printf("car_park          = %d, %d\n", stadium.car_park.level,          stadium.car_park.time);
-
-        printf("safety rating     =");
-        for (int i = 0; i < sizeof (stadium.safety_rating); ++i)
-            printf(" %02x", stadium.safety_rating[i]);
-        printf("\n");
-
-        for (int i = 0; i < 4; ++i) {
-            printf(
-                "[%20.20s] capacity = %5d %s\n",
-                stadium.stand[i].name, stadium.capacity[i].seating,
-                stadium.capacity[i].terraces ? "terraces" : "seating"
-            );
-        }
-
+    for (int i = 0; i < 4; ++i) {
         printf(
-            "Numb01: %5d\nNumb02: %5d\nNumb03: %5d\nNumb04: %5d\n",
-            manager.numb01, manager.numb02, manager.numb03, manager.numb04
+            "[%20.20s] capacity = %5d %s\n",
+            stadium.stand[i].name, stadium.capacity[i].seating,
+            stadium.capacity[i].terraces ? "terraces" : "seating"
         );
+    }
+
+    printf(
+        "Numb01: %5d\nNumb02: %5d\nNumb03: %5d\nNumb04: %5d\n",
+        manager.numb01, manager.numb02, manager.numb03, manager.numb04
+    );
+    printf(
+        "Managerial rating.....:%3d%% (%+2d%%)\n"
+        "Directors confidence..:%3d%% (%+2d%%)\n"
+        "Supporters confidence.:%3d%% (%+2d%%)\n",
+        manager.managerial_rating_current,
+        manager.managerial_rating_current - manager.managerial_rating_start,
+        manager.directors_confidence_current,
+        manager.directors_confidence_current - manager.directors_confidence_start,
+        manager.supporters_confidence_current,
+        manager.supporters_confidence_current - manager.supporters_confidence_start
+    );
+
+    printf("---- match data start ?----\n");
+
+    for (int i = 0; i < sizeof (manager.head6); ++i) {
+        if ( i % 16 == 0 )
+            printf("\n[%03d] ", i);
+        printf("%02x ", manager.head6[i]);
+    }
+    printf("\n");
+
+    if (manager.player3_idx == -1 )
+        printf("NomPlayer1: %d ", manager.player3_idx);
+    else
         printf(
-            "Managerial rating.....:%3d%% (%+2d%%)\n"
-            "Directors confidence..:%3d%% (%+2d%%)\n"
-            "Supporters confidence.:%3d%% (%+2d%%)\n",
-            manager.managerial_rating_current,
-            manager.managerial_rating_current - manager.managerial_rating_start,
-            manager.directors_confidence_current,
-            manager.directors_confidence_current - manager.directors_confidence_start,
-            manager.supporters_confidence_current,
-            manager.supporters_confidence_current - manager.supporters_confidence_start
+            "NomPlayer1: (%04x) %12.12s",
+            manager.player3_idx,
+            gamec.player[manager.player3_idx].name
         );
 
+    for (int i = 0; i < sizeof (manager.magic4); ++i) {
+        if ( i % 16 == 0 )
+            printf("\n[%03d] ", i);
+        printf("%02x ", manager.magic4[i]);
+    }
+    printf("\n");
 
-        printf("---- match data start ?----\n");
+    if ( manager.player4_idx == -1 )
+        printf("NomPlayer2: %d ", manager.player4_idx);
+    else
+        printf(
+            "NomPlayer2: (%04x) %12.12s",
+            manager.player4_idx,
+            gamec.player[manager.player4_idx].name
+        );
 
-        for (int i = 0; i < sizeof (manager.head6); ++i) {
-            if ( i % 16 == 0 )
-                printf("\n[%03d] ", i);
-            printf("%02x ", manager.head6[i]);
-        }
-        printf("\n");
-
-        if (manager.player3_idx == -1 )
-            printf("NomPlayer1: %d ", manager.player3_idx);
-        else
-            printf(
-                "NomPlayer1: (%04x) %12.12s",
-                manager.player3_idx,
-                gamec.player[manager.player3_idx].name
-            );
-
-        for (int i = 0; i < sizeof (manager.magic4); ++i) {
-            if ( i % 16 == 0 )
-                printf("\n[%03d] ", i);
-            printf("%02x ", manager.magic4[i]);
-        }
-        printf("\n");
-
-        if ( manager.player4_idx == -1 )
-            printf("NomPlayer2: %d ", manager.player4_idx);
-        else
-            printf(
-                "NomPlayer2: (%04x) %12.12s",
-                manager.player4_idx,
-                gamec.player[manager.player4_idx].name
-            );
-
-        for (int i = 0; i < sizeof (manager.foot6); ++i) {
-            if ( i % 16 == 0 )
-                printf("\n[%03d] ", i);
-            printf("%02x ", manager.foot6[i]);
-        }
-        printf("\n");
+    for (int i = 0; i < sizeof (manager.foot6); ++i) {
+        if ( i % 16 == 0 )
+            printf("\n[%03d] ", i);
+        printf("%02x ", manager.foot6[i]);
+    }
+    printf("\n");
 
 /*
-        printf(
-            "(%04x) %16.16s %d(%d)  (%04x) %16.16s %d(%d)\n",
-            gamea.manager[nr].match[0].club,
-            gameb.club[ gamea.manager[nr].match[0].club ].name,
-            gamea.manager[nr].match[0].total_goals,
-            gamea.manager[nr].match[0].first_half_goals,
-            gamea.manager[nr].match[1].club,
-            gameb.club[ gamea.manager[nr].match[1].club ].name,
-            gamea.manager[nr].match[1].total_goals,
-            gamea.manager[nr].match[1].first_half_goals
-        );
+    printf(
+        "(%04x) %16.16s %d(%d)  (%04x) %16.16s %d(%d)\n",
+        gamea.manager[nr].match[0].club,
+        gameb.club[ gamea.manager[nr].match[0].club ].name,
+        gamea.manager[nr].match[0].total_goals,
+        gamea.manager[nr].match[0].first_half_goals,
+        gamea.manager[nr].match[1].club,
+        gameb.club[ gamea.manager[nr].match[1].club ].name,
+        gamea.manager[nr].match[1].total_goals,
+        gamea.manager[nr].match[1].first_half_goals
+    );
 */
 
-        printf("match summary\n");
+    printf("match summary\n");
 
-        struct gamea::manager::match_summary &ms = manager.match_summary;
-        for (int i = 0; i < 2; ++i) {
-            struct gamea::manager::match_summary::club &club = ms.club[i];
-            if (club.club_idx == -1) {
-                printf("%s: %d", i ? "Away" : "Home",
-                    club.club_idx);
-                continue;
-            }
-
-            printf(
-                "%s: (%04x) %16.16s", i ? "Away" : "Home",
-                club.club_idx, gameb.club[club.club_idx].name
-            );
-
-            printf(
-                " Goals: %d(%d)\n",
-                club.total_goals,
-                club.first_half_goals
-            );
-
-            printf("Pattern:");
-            for (int j = 0; j < sizeof (club.pattern6); ++j) {
-                printf(" %02x", club.pattern6[j]);
-            }
-            printf("\n");
-
-            for (int j = 0; j < sizeof (club.match_data); ++j) {
-                if ( j % 16 == 0 )
-                    printf("\n[%03d]", j);
-                printf(" %02x", club.match_data[j]);
-            }
-            printf("\n");
-
-            printf("Corners...: %d\n", club.corners);
-            printf("Throw ins.: %d\n", club.throw_ins);
-            printf("Free kicks: %d\n", club.free_kicks);
-            printf("Penalties.: %d\n", club.penalties);
-
-            printf("Lineup\n");
-            for (int j = 0; j < 14; ++j) {
-                struct gamea::manager::match_summary::club::lineup &lineup = club.lineup[j];
-                print_player_name(lineup.player_idx, false);
-
-                for (int k = 0; k < sizeof (lineup.data5); ++k) {
-                    printf(" %02x", lineup.data5[k]);
-                }
-
-                printf(" [%d]", lineup.card); // 4 = red, 1 = yellow?
-
-                for (int k = 0; k < sizeof (lineup.x); ++k) {
-                    printf(" %02x", lineup.x[k]);
-                }
-                printf("\n");
-            }
-
-            printf("Goals\n");
-            for (int j = 0; j < 8; ++j) {
-                struct gamea::manager::match_summary::club::goal &goal = club.goal[j];
-                print_player_name(goal.player_idx, false);
-
-                if (goal.player_idx == -1)
-                    printf(" time: %d", goal.time);
-                else
-                    printf(
-                        " %2d:%02d",
-                        goal.time / 60,
-                        goal.time % 60
-                    );
-                printf("\n");
-            }
-
-            assert(club.always_null == 0);
-
-            printf("always_null: %04x\n", club.always_null);
-            printf("Substitutions remaining: %d\n", club.substitutions_remaining);
-            printf("other remaining: %d\n", club.other);
-
-            assert(club.substitutions_remaining < 3);
-
-            printf("Home/Away magic: %04x\n", club.home_away_data);
-
-            if (i == 0 && club.club_idx == 0x0062)
-                assert(club.home_away_data == 0x5738);
-
-            if (i == 1 && club.club_idx == 0x0062)
-                assert(club.home_away_data == 0x91f8);
-        }
-
-
-        static const char *weather[] = {
-            "", /* 00 */
-            "icy", /* 01 */
-            "", /* 02 */
-            "", /* 03 */
-            "", /* 04 */
-            "", /* 05 */
-            "heavy rain", /* 06 */
-            "high winds", /* 07 */
-            "cold & sunny", /* 08 */
-            "cold & raining", /* 09 */
-            "cold & cloudy", /* 0a */
-            "cold & windy", /* 0b */
-            "heavy rain", /* 0c */
-            "high winds", /* 0d */
-            "light rain", /* 0e */
-            "overcast", /* 0f */
-            "warm & raining", /* 10 */
-            "warm & cloudy",  /* 11 */
-            "raining", /* 12 */
-            "windy & sunny", /* 13 */
-            "light winds" /* 14 */
-        };
-
-        printf("Weather: (%04x) %s\n", ms.weather, weather[ms.weather]);
-
-        if (ms.referee_idx == -1)
-            printf("Referee: %d", ms.referee_idx);
-        else
-            printf(
-                "Referee: (%02x) %14.14s\n",
-                ms.referee_idx,
-                gamea.referee[ms.referee_idx].name
-            );
-
-        for (int i = 0; i < sizeof (ms.data156); ++i) {
-            if ( i % 16 == 0 )
-                printf("\n[%03d] ", i);
-            printf("%02x ", ms.data156[i]);
-        }
-        printf("\n");
-
-        printf("Match type: (%02x)", ms.match_type);
-
-        for (int i = 0; i < sizeof (ms.data157); ++i) {
-            if ( i % 16 == 0 )
-                printf("\n[%03d] ", i);
-            printf("%02x ", ms.data157[i]);
-        }
-        printf("\n");
-
-        printf("audience %d\n", ms.audience);
-
-        for (int i = 0; i < sizeof (ms.data158); ++i) {
-            if ( i % 16 == 0 )
-                printf("\n[%03d] ", i);
-            printf("%02x ", ms.data158[i]);
-        }
-        printf("\n\n");
-
-        static const char *div[] = {
-            "Prem.",
-            "Div 1",
-            "Div 2",
-            "Div 3",
-            "Conf."
-        };
-
-        printf("Year Div   (0000)Club             PS PL  W  D  L  GD PTS\n");
-        for (int i = 0; i < 20; ++i) {
-            struct gamea::manager::league_history &lh = manager.league_history[i];
-
-            if (lh.year == 0)
-                continue;
-
-            printf(
-                "%4d %5.5s (%04x)%16.16s %2d %2d %2d %2d %2d %3d %3d",
-                lh.year, div[lh.div], lh.club_idx, gameb.club[lh.club_idx].name,
-                lh.ps, lh.p, lh.w, lh.d, lh.l, lh.gd, lh.pts
-            );
-
-            printf(
-                " %02x %02x %02x %02x"
-                " %02x %02x %02x %02x"
-                " %02x %02x %02x %02x\n",
-                lh.unk21, lh.unk22, lh.unk23, lh.unk24,
-                lh.unk25, lh.unk26, lh.unk27, lh.unk28,
-                lh.unk29, lh.unk30, lh.unk31, lh.unk32
-            );
-        }
-
-        static const char *match_type[] = {
-            "Premier league",
-            "Division one",
-            "Division two",
-            "Division three",
-            "Conference",
-            "F.A. cup",
-            "League cup",
-            "Champions cup",
-            "Cup winners cup",
-            "U.E.F.A. cup",
-            "Charity shield"
-        };
-
-        printf("League titles  Won Yrs  Cup titles      Won Yrs\n");
-        for (int i = 0; i < 5; ++i) {
-            printf(
-                "%-14.14s %3d %3d  %-15.15s %3d %3d\n",
-                match_type[i],
-                manager.titles[i].won,
-                manager.titles[i].yrs,
-
-                match_type[5 + i],
-                manager.titles[5 + i].won,
-                manager.titles[5 + i].yrs
-            );
+    struct gamea::manager::match_summary &ms = manager.match_summary;
+    for (int i = 0; i < 2; ++i) {
+        struct gamea::manager::match_summary::club &club = ms.club[i];
+        if (club.club_idx == -1) {
+            printf("%s: %d", i ? "Away" : "Home",
+                club.club_idx);
+            continue;
         }
 
         printf(
-            "                        %-15.15s %3d %3d\n\n",
-            match_type[10],
-            manager.titles[10].won,
-            manager.titles[10].yrs
+            "%s: (%04x) %16.16s", i ? "Away" : "Home",
+            club.club_idx, gameb.club[club.club_idx].name
         );
 
-        printf("Match type       Play  Won Drew Lost   For   Agn\n");
-        for (int i = 0; i < 11; ++i)
-            printf(
-                "%-15.15s  %4d %4d %4d %4d  %4d  %4d\n",
-                match_type[i],
-                manager.manager_history[i].play,
-                manager.manager_history[i].won,
-                manager.manager_history[i].drew,
-                manager.manager_history[i].lost,
-                manager.manager_history[i].forx,
-                manager.manager_history[i].agn
-            );
-        printf("\n");
+        printf(
+            " Goals: %d(%d)\n",
+            club.total_goals,
+            club.first_half_goals
+        );
 
-        for (int i = 0; i < sizeof (manager.data159); ++i) {
-            if ( i % 16 == 0 )
-                printf("\n[%03d] ", i);
-            printf("%02x ", manager.data159[i]);
+        printf("Pattern:");
+        for (int j = 0; j < sizeof (club.pattern6); ++j) {
+            printf(" %02x", club.pattern6[j]);
         }
         printf("\n");
 
-        printf("       Previous clubs   From To   Mngr Drct Sprt\n");
-        for (int i = 0; i < 4; ++i) {
-            printf(
-                "(%04x) %16.16s %4d %4d %3d%% %3d%% %3d%%\n",
-                manager.previous_clubs[i].club_idx,
-                gameb.club[manager.previous_clubs[i].club_idx].name,
-                manager.previous_clubs[i].year_from,
-                manager.previous_clubs[i].year_to,
-                manager.previous_clubs[i].mngr,
-                manager.previous_clubs[i].drct,
-                manager.previous_clubs[i].sprt
-            );
-        }
-
-        printf("Current club start year: %4d\n", manager.year_start_cur_club);
-
-        printf("Manager of the month awards.%d\n",
-            manager.manager_of_the_month_awards);
-
-        printf("Manager of the year awards..%d\n",
-            manager.manager_of_the_year_awards);
-        printf("\n");
-
-        printf("--- Previous Matches History ---\n");
-        printf("Team             Division     P  W  D  L   F   A\n");
-        for (int i = 0; i < 242; ++i)
-            printf(
-                "%16.16s %-10.10s  %2d %2d %2d %2d %3d %3d\n",
-                gameb.club[ manager.match_history[i].club_idx ].name,
-                "FIXME", // premier, div 1-3, conference, non league and european
-                manager.match_history[i].played,
-                manager.match_history[i].won,
-                manager.match_history[i].draw,
-                manager.match_history[i].played - manager.match_history[i].won - manager.match_history[i].draw,
-                manager.match_history[i].goals_f,
-                manager.match_history[i].goals_a
-            );
-        printf("\n");
-
-
-        for (int i = 0; i < sizeof (manager.data160); ++i) {
-            if ( i % 16 == 0 )
-                printf("\n[%03d] ", i);
-            printf("%02x ", manager.data160[i]);
+        for (int j = 0; j < sizeof (club.match_data); ++j) {
+            if ( j % 16 == 0 )
+                printf("\n[%03d]", j);
+            printf(" %02x", club.match_data[j]);
         }
         printf("\n");
 
-        for ( int i = 0; i < 8; ++i )
-            printf("tactic[%d].name: %20.20s\n", i, manager.tactic[i].name);
-        printf("\n");
+        printf("Corners...: %d\n", club.corners);
+        printf("Throw ins.: %d\n", club.throw_ins);
+        printf("Free kicks: %d\n", club.free_kicks);
+        printf("Penalties.: %d\n", club.penalties);
+
+        printf("Lineup\n");
+        for (int j = 0; j < 14; ++j) {
+            struct gamea::manager::match_summary::club::lineup &lineup = club.lineup[j];
+            print_player_name(lineup.player_idx, false);
+
+            for (int k = 0; k < sizeof (lineup.data5); ++k) {
+                printf(" %02x", lineup.data5[k]);
+            }
+
+            printf(" [%d]", lineup.card); // 4 = red, 1 = yellow?
+
+            for (int k = 0; k < sizeof (lineup.x); ++k) {
+                printf(" %02x", lineup.x[k]);
+            }
+            printf("\n");
+        }
+
+        printf("Goals\n");
+        for (int j = 0; j < 8; ++j) {
+            struct gamea::manager::match_summary::club::goal &goal = club.goal[j];
+            print_player_name(goal.player_idx, false);
+
+            if (goal.player_idx == -1)
+                printf(" time: %d", goal.time);
+            else
+                printf(
+                    " %2d:%02d",
+                    goal.time / 60,
+                    goal.time % 60
+                );
+            printf("\n");
+        }
+
+        assert(club.always_null == 0);
+
+        printf("always_null: %04x\n", club.always_null);
+        printf("Substitutions remaining: %d\n", club.substitutions_remaining);
+        printf("other remaining: %d\n", club.other);
+
+        assert(club.substitutions_remaining < 3);
+
+        printf("Home/Away magic: %04x\n", club.home_away_data);
+
+        if (i == 0 && club.club_idx == 0x0062)
+            assert(club.home_away_data == 0x5738);
+
+        if (i == 1 && club.club_idx == 0x0062)
+            assert(club.home_away_data == 0x91f8);
+    }
+
+    static const char *weather[] = {
+        "", /* 00 */
+        "icy", /* 01 */
+        "", /* 02 */
+        "", /* 03 */
+        "", /* 04 */
+        "", /* 05 */
+        "heavy rain", /* 06 */
+        "high winds", /* 07 */
+        "cold & sunny", /* 08 */
+        "cold & raining", /* 09 */
+        "cold & cloudy", /* 0a */
+        "cold & windy", /* 0b */
+        "heavy rain", /* 0c */
+        "high winds", /* 0d */
+        "light rain", /* 0e */
+        "overcast", /* 0f */
+        "warm & raining", /* 10 */
+        "warm & cloudy",  /* 11 */
+        "raining", /* 12 */
+        "windy & sunny", /* 13 */
+        "light winds" /* 14 */
+    };
+
+    printf("Weather: (%04x) %s\n", ms.weather, weather[ms.weather]);
+
+    if (ms.referee_idx == -1)
+        printf("Referee: %d", ms.referee_idx);
+    else
+        printf(
+            "Referee: (%02x) %14.14s\n",
+            ms.referee_idx,
+            gamea.referee[ms.referee_idx].name
+        );
+
+    for (int i = 0; i < sizeof (ms.data156); ++i) {
+        if ( i % 16 == 0 )
+            printf("\n[%03d] ", i);
+        printf("%02x ", ms.data156[i]);
+    }
+    printf("\n");
+
+    printf("Match type: (%02x)", ms.match_type);
+
+    for (int i = 0; i < sizeof (ms.data157); ++i) {
+        if ( i % 16 == 0 )
+            printf("\n[%03d] ", i);
+        printf("%02x ", ms.data157[i]);
+    }
+    printf("\n");
+
+    printf("audience %d\n", ms.audience);
+
+    for (int i = 0; i < sizeof (ms.data158); ++i) {
+        if ( i % 16 == 0 )
+            printf("\n[%03d] ", i);
+        printf("%02x ", ms.data158[i]);
+    }
+    printf("\n\n");
+
+    static const char *div[] = {
+        "Prem.",
+        "Div 1",
+        "Div 2",
+        "Div 3",
+        "Conf."
+    };
+
+    printf("Year Div   (0000)Club             PS PL  W  D  L  GD PTS\n");
+    for (int i = 0; i < 20; ++i) {
+        struct gamea::manager::league_history &lh = manager.league_history[i];
+
+        if (lh.year == 0)
+            continue;
+
+        printf(
+            "%4d %5.5s (%04x)%16.16s %2d %2d %2d %2d %2d %3d %3d",
+            lh.year, div[lh.div], lh.club_idx, gameb.club[lh.club_idx].name,
+            lh.ps, lh.p, lh.w, lh.d, lh.l, lh.gd, lh.pts
+        );
+
+        printf(
+            " %02x %02x %02x %02x"
+            " %02x %02x %02x %02x"
+            " %02x %02x %02x %02x\n",
+            lh.unk21, lh.unk22, lh.unk23, lh.unk24,
+            lh.unk25, lh.unk26, lh.unk27, lh.unk28,
+            lh.unk29, lh.unk30, lh.unk31, lh.unk32
+        );
+    }
+
+    static const char *match_type[] = {
+        "Premier league",
+        "Division one",
+        "Division two",
+        "Division three",
+        "Conference",
+        "F.A. cup",
+        "League cup",
+        "Champions cup",
+        "Cup winners cup",
+        "U.E.F.A. cup",
+        "Charity shield"
+    };
+
+    printf("League titles  Won Yrs  Cup titles      Won Yrs\n");
+    for (int i = 0; i < 5; ++i) {
+        printf(
+            "%-14.14s %3d %3d  %-15.15s %3d %3d\n",
+            match_type[i],
+            manager.titles[i].won,
+            manager.titles[i].yrs,
+
+            match_type[5 + i],
+            manager.titles[5 + i].won,
+            manager.titles[5 + i].yrs
+        );
+    }
+
+    printf(
+        "                        %-15.15s %3d %3d\n\n",
+        match_type[10],
+        manager.titles[10].won,
+        manager.titles[10].yrs
+    );
+
+    printf("Match type       Play  Won Drew Lost   For   Agn\n");
+    for (int i = 0; i < 11; ++i)
+        printf(
+            "%-15.15s  %4d %4d %4d %4d  %4d  %4d\n",
+            match_type[i],
+            manager.manager_history[i].play,
+            manager.manager_history[i].won,
+            manager.manager_history[i].drew,
+            manager.manager_history[i].lost,
+            manager.manager_history[i].forx,
+            manager.manager_history[i].agn
+        );
+    printf("\n");
+
+    for (int i = 0; i < sizeof (manager.data159); ++i) {
+        if ( i % 16 == 0 )
+            printf("\n[%03d] ", i);
+        printf("%02x ", manager.data159[i]);
+    }
+    printf("\n");
+
+    printf("       Previous clubs   From To   Mngr Drct Sprt\n");
+    for (int i = 0; i < 4; ++i) {
+        printf(
+            "(%04x) %16.16s %4d %4d %3d%% %3d%% %3d%%\n",
+            manager.previous_clubs[i].club_idx,
+            gameb.club[manager.previous_clubs[i].club_idx].name,
+            manager.previous_clubs[i].year_from,
+            manager.previous_clubs[i].year_to,
+            manager.previous_clubs[i].mngr,
+            manager.previous_clubs[i].drct,
+            manager.previous_clubs[i].sprt
+        );
+    }
+
+    printf("Current club start year: %4d\n", manager.year_start_cur_club);
+
+    printf("Manager of the month awards.%d\n",
+        manager.manager_of_the_month_awards);
+
+    printf("Manager of the year awards..%d\n",
+        manager.manager_of_the_year_awards);
+    printf("\n");
+
+    printf("--- Previous Matches History ---\n");
+    printf("Team             Division     P  W  D  L   F   A\n");
+    for (int i = 0; i < 242; ++i)
+        printf(
+            "%16.16s %-10.10s  %2d %2d %2d %2d %3d %3d\n",
+            gameb.club[manager.match_history[i].club_idx].name,
+            "FIXME", // premier, div 1-3, conference, non league and european
+            manager.match_history[i].played,
+            manager.match_history[i].won,
+            manager.match_history[i].draw,
+            manager.match_history[i].played - manager.match_history[i].won - manager.match_history[i].draw,
+            manager.match_history[i].goals_f,
+            manager.match_history[i].goals_a
+        );
+    printf("\n");
+
+    for (int i = 0; i < sizeof (manager.data160); ++i) {
+        if ( i % 16 == 0 )
+            printf("\n[%03d] ", i);
+        printf("%02x ", manager.data160[i]);
+    }
+    printf("\n");
+
+    for ( int i = 0; i < 8; ++i )
+        printf("tactic[%d].name: %20.20s\n", i, manager.tactic[i].name);
+    printf("\n");
 }
 
 void dump_gameb() {
@@ -1935,65 +1932,65 @@ void dump_gamea_match_summary()
         printf("</%s club %d data>\n", i ? "away" : "home", i);
     }
 
-        static const char *weather[] = {
-            "", /* 00 */
-            "icy", /* 01 */
-            "", /* 02 */
-            "", /* 03 */
-            "", /* 04 */
-            "", /* 05 */
-            "heavy rain", /* 06 */
-            "high winds", /* 07 */
-            "cold & sunny", /* 08 */
-            "cold & raining", /* 09 */
-            "cold & cloudy", /* 0a */
-            "cold & windy", /* 0b */
-            "heavy rain", /* 0c */
-            "high winds", /* 0d */
-            "light rain", /* 0e */
-            "overcast", /* 0f */
-            "warm & raining", /* 10 */
-            "warm & cloudy",  /* 11 */
-            "raining", /* 12 */
-            "windy & sunny", /* 13 */
-            "light winds" /* 14 */
-        };
+    static const char *weather[] = {
+        "", /* 00 */
+        "icy", /* 01 */
+        "", /* 02 */
+        "", /* 03 */
+        "", /* 04 */
+        "", /* 05 */
+        "heavy rain", /* 06 */
+        "high winds", /* 07 */
+        "cold & sunny", /* 08 */
+        "cold & raining", /* 09 */
+        "cold & cloudy", /* 0a */
+        "cold & windy", /* 0b */
+        "heavy rain", /* 0c */
+        "high winds", /* 0d */
+        "light rain", /* 0e */
+        "overcast", /* 0f */
+        "warm & raining", /* 10 */
+        "warm & cloudy",  /* 11 */
+        "raining", /* 12 */
+        "windy & sunny", /* 13 */
+        "light winds" /* 14 */
+    };
 
-        printf("weather: (%04x) %s\n", ms.weather, weather[ms.weather]);
+    printf("weather: (%04x) %s\n", ms.weather, weather[ms.weather]);
 
-        if (ms.referee_idx == -1)
-            printf("referee: %d", ms.referee_idx);
-        else
-            printf(
-                "referee: (%02x) %14.14s\n",
-                ms.referee_idx,
-                gamea.referee[ms.referee_idx].name
-            );
+    if (ms.referee_idx == -1)
+        printf("referee: %d", ms.referee_idx);
+    else
+        printf(
+            "referee: (%02x) %14.14s\n",
+            ms.referee_idx,
+            gamea.referee[ms.referee_idx].name
+        );
 
-        for (int i = 0; i < sizeof( gamea.manager[0].match_summary.data156 ); ++i) {
-            if ( i % 16 == 0 )
-                printf("\n[%03d] ", i);
-            printf("%02x ", gamea.manager[0].match_summary.data156[i]);
-        }
-        printf("\n");
+    for (int i = 0; i < sizeof( gamea.manager[0].match_summary.data156 ); ++i) {
+        if ( i % 16 == 0 )
+            printf("\n[%03d] ", i);
+        printf("%02x ", gamea.manager[0].match_summary.data156[i]);
+    }
+    printf("\n");
 
-        printf("Match type: (%02x)", gamea.manager[0].match_summary.match_type);
+    printf("Match type: (%02x)", gamea.manager[0].match_summary.match_type);
 
-        for (int i = 0; i < sizeof( gamea.manager[0].match_summary.data157 ); ++i) {
-            if ( i % 16 == 0 )
-                printf("\n[%03d] ", i);
-            printf("%02x ", gamea.manager[0].match_summary.data157[i]);
-        }
-        printf("\n");
+    for (int i = 0; i < sizeof( gamea.manager[0].match_summary.data157 ); ++i) {
+        if ( i % 16 == 0 )
+            printf("\n[%03d] ", i);
+        printf("%02x ", gamea.manager[0].match_summary.data157[i]);
+    }
+    printf("\n");
 
-        printf("audience %d\n", gamea.manager[0].match_summary.audience);
+    printf("audience %d\n", gamea.manager[0].match_summary.audience);
 
-        for (int i = 0; i < sizeof( gamea.manager[0].match_summary.data158 ); ++i) {
-            if ( i % 16 == 0 )
-                printf("\n[%03d] ", i);
-            printf("%02x ", gamea.manager[0].match_summary.data158[i]);
-        }
-        printf("\n\n");
+    for (int i = 0; i < sizeof( gamea.manager[0].match_summary.data158 ); ++i) {
+        if ( i % 16 == 0 )
+            printf("\n[%03d] ", i);
+        printf("%02x ", gamea.manager[0].match_summary.data158[i]);
+    }
+    printf("\n\n");
 }
 
 
