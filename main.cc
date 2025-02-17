@@ -29,32 +29,36 @@ void dump_player_row(struct gamec::player &player, struct gameb::club &club);
 
 void dump_free_players();
 
-void print_help(char *command) {
-    fprintf(stderr, "Usage: %s -[abc] -g 1-8 [-f] [-t 0-113] [-s] [-h] [ /path/to/pm3/ ]\n", command);
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  -[abc]\n");
-    fprintf(stderr, "    Dump game[abc]\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  -g 1-8, --game=1-8\n");
-    fprintf(stderr, "    Which savegame to work on\n");
-    fprintf(stderr, "  --club[=0..243]\n");
-    fprintf(stderr, "    Dump information on a single club within a savegame\n");
-    fprintf(stderr, "      (defaults to the club of player0, if index not provided)\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  -f\n");
-    fprintf(stderr, "    Print out free players\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  -t 0-113\n");
-    fprintf(stderr, "    Change starting team to team ID\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  -s\n");
-    fprintf(stderr, "    Maximize all values for team\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  -h\n");
-    fprintf(stderr, "    Displays this help message\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  [ /path/to/pm3/ ]\n");
-    fprintf(stderr, "    optionally provide a path to pm3\n");
+void print_help(char* command) {
+    fprintf(
+        stderr,
+        "Usage: %s -[abc] -g 1-8 [-f] [-t 0-113] [-s] [-h] [ /path/to/pm3/ ]\n"
+        "\n"
+        "  -[abc]\n"
+        "    Dump game[abc]\n"
+        "\n"
+        "  -g 1-8, --game=1-8\n"
+        "    Which savegame to work on\n"
+        "  --club[=0..243]\n"
+        "    Dump information on a single club within a savegame\n"
+        "      (defaults to the club of player0, if index not provided)\n"
+        "\n"
+        "  -f\n"
+        "    Print out free players\n"
+        "\n"
+        "  -t 0-113\n"
+        "    Change starting team to team ID\n"
+        "\n"
+        "  -s\n"
+        "    Maximize all values for team\n"
+        "\n"
+        "  -h\n"
+        "    Displays this help message\n"
+        "\n"
+        "  [ /path/to/pm3/ ]\n"
+        "    optionally provide a path to pm3\n",
+        command
+    );
 }
 
 int main(int argc, char *argv[])
@@ -132,9 +136,12 @@ int main(int argc, char *argv[])
         return EXIT_SUCCESS;
     }
 
-    fprintf(stderr, "sizeof (gamea)        = 0x%0zx\n", sizeof (struct gamea));
-    fprintf(stderr, "sizeof (gameb.club)   = 0x%0zx\n", sizeof (struct gameb::club));
-    fprintf(stderr, "sizeof (gamec.player) = 0x%0zx\n", sizeof (struct gamec::player));
+    fprintf(
+        stderr, "sizeof (gamea)        = 0x%0zx\n"
+                "sizeof (gameb.club)   = 0x%0zx\n"
+                "sizeof (gamec.player) = 0x%0zx\n",
+        sizeof(struct gamea), sizeof(struct gameb::club), sizeof(struct gamec::player)
+    );
 
     assert(sizeof (struct gamea)         == 0x7372);
     assert(sizeof (struct gameb::club)   == 0x023A);
