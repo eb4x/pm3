@@ -570,4 +570,7 @@ void change_club(int new_club_idx, int player = 0);
 
 void soup_up(int player = 0);
 
+void load_gamestate(int game_nr, const char* game_path);
+void save_gamestate(int game_nr, const char* game_path);
+
 #endif
